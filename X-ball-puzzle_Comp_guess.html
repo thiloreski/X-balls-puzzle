@@ -27,7 +27,7 @@
     <div id="setup-area">
         <h2 style="margin-top: 0;">I will find the wrong ball</h2>
         <div class="instruction-box">
-            Enter the number of balls. Secretly choose one ball and decide if it is heavier or lighter. The AI will find it by asking for scale results.
+            Enter the number of balls. The AI will logically find the tampered ball by splitting the remaining possibilities perfectly.
         </div>
         <input type="number" id="ball_input" value="12" style="font-size: 1.5rem; width: 100px; text-align: center;"><br><br>
         <button id="start_trigger" class="btn btn-green">Start AI</button>
@@ -62,20 +62,20 @@ import math
 class AIController:
     def __init__(self, n):
         self.n = n
+        # Liste aller möglichen Zustände: (Kugel-Nummer, 'heavier' oder 'lighter')
         self.possibilities = []
         for i in range(1, n + 1):
             self.possibilities.append((i, "lighter"))
             self.possibilities.append((i, "heavier"))
+        
         self.step = 0
         self.max_w = math.ceil(math.log(2*n + 1, 3))
         document.getElementById("max_info").innerText = f"Target: Max {self.max_w} weighings"
-        self.current_l = []
-        self.current_r = []
         self.calculate_and_render()
 
-    def get_result(self, ball, state, l_group, r_group):
-        if ball in l_group: return "L" if state == "heavier" else "R"
-        if ball in r_group: return "R" if state == "heavier" else "L"
+    def get_outcome(self, ball_idx, state, l_group, r_group):
+        if ball_idx in l_group: return "L" if state == "heavier" else "R"
+        if ball_idx in r_group: return "R" if state == "heavier" else "L"
         return "E"
 
     def calculate_and_render(self):
@@ -86,31 +86,31 @@ class AIController:
         self.step += 1
         document.getElementById("step_info").innerText = f"Weighing {self.step}"
         
-        candidates = list(set([p[0] for p in self.possibilities]))
+        # Intelligenz: Finde die Wägung, die den maximalen verbleibenden Raum am kleinsten hält
         best_l, best_r = [], []
         min_worst_case = 999
         
-        # Optimize split
+        # Wir testen verschiedene Anzahlen an Kugeln auf den Schalen
         for m in range(1, (self.n // 2) + 1):
-            l, r = candidates[:m], candidates[m:2*m]
-            if not r or len(l) != len(r): continue
+            # Wir nehmen alle verfügbaren Kugel-IDs (1 bis N)
+            all_balls = list(range(1, self.n + 1))
+            l, r = all_balls[:m], all_balls[m:2*m]
             
-            counts = {"L": 0, "R": 0, "E": 0}
+            outcomes = {"L": 0, "R": 0, "E": 0}
             for b, s in self.possibilities:
-                counts[self.get_result(b, s, l, r)] += 1
+                res = self.get_outcome(b, s, l, r)
+                outcomes[res] += 1
             
-            worst = max(counts.values())
-            if worst < min_worst_case:
-                min_worst_case = worst
+            worst_case = max(outcomes.values())
+            # Minimax-Prinzip: Minimiere die maximale Anzahl an verbleibenden Möglichkeiten
+            if worst_case < min_worst_case:
+                min_worst_case = worst_case
                 best_l, best_r = l, r
-
-        if not best_l: # Fallback
-            best_l, best_r = [candidates[0]], [candidates[1]]
 
         self.current_l, self.current_r = best_l, best_r
         document.getElementById("instruction").innerText = f"Place {len(best_l)} balls on each side"
         
-        # Update UI
+        # Kugeln visuell verschieben
         for i in range(1, self.n + 1):
             el = document.getElementById(f"b_{i}")
             if i in self.current_l: document.getElementById("p_left").appendChild(el)
@@ -118,30 +118,27 @@ class AIController:
             else: document.getElementById("storage").appendChild(el)
 
     def handle_click(self, feedback):
-        # Update scale tilt
         beam = document.getElementById("beam_element")
         if feedback == "left": beam.className = "beam tilt-left"
         elif feedback == "right": beam.className = "beam tilt-right"
         else: beam.className = "beam"
 
-        # Filter possibilities
-        map_code = {"left": "L", "right": "R", "equal": "E"}
-        target = map_code[feedback]
-        self.possibilities = [p for p in self.possibilities if self.get_result(p[0], p[1], self.current_l, self.current_r) == target]
+        target = {"left": "L", "right": "R", "equal": "E"}[feedback]
         
-        # Small delay to see the tilt before next step
-        window.setTimeout(create_proxy(self.calculate_and_render), 700)
+        # Filter: Behalte nur die Möglichkeiten, die das gewählte Waagen-Ergebnis produzieren würden
+        self.possibilities = [p for p in self.possibilities if self.get_outcome(p[0], p[1], self.current_l, self.current_r) == target]
+        
+        window.setTimeout(create_proxy(self.calculate_and_render), 600)
 
     def show_solution(self):
         document.getElementById("action_btns").classList.add("hidden")
-        document.getElementById("instruction").innerText = "Analysis complete."
         res_el = document.getElementById("result_display")
         res_el.classList.remove("hidden")
         document.getElementById("reload_btn").classList.remove("hidden")
         
         if len(self.possibilities) == 1:
             ball, state = self.possibilities[0]
-            res_el.innerText = f"RESULT: Ball {ball} is {state.upper()}!"
+            res_el.innerText = f"SOLVED: Ball {ball} is {state.upper()}!"
         else:
             res_el.innerText = "Error: Logical contradiction. Please restart."
 
@@ -152,7 +149,6 @@ def start(event):
     n = int(document.getElementById("ball_input").value)
     document.getElementById("setup-area").classList.add("hidden")
     document.getElementById("game-area").style.display = "block"
-    
     store = document.getElementById("storage")
     for i in range(1, n + 1):
         b = document.createElement("div")
@@ -160,7 +156,6 @@ def start(event):
         b.id = f"b_{i}"
         b.innerText = str(i)
         store.appendChild(b)
-    
     ai_game = AIController(n)
 
 document.getElementById("start_trigger").onclick = create_proxy(start)
