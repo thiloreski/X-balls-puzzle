@@ -7,7 +7,7 @@ Begin immer 1. Wägung: 4 zu 4 Kugeln
 
 ## Szenario A) 4 zu 4 - Eine der Waagschalen bei der initialen 4 zu 4 Wägung ist schwerer
 
-Damit sind 4 "potentiell schwerere", 4 "potentiell leichtere" und 4 "echten" identifiziert. 
+Damit sind 4 "potentiell schwerere", 4 "potentiell leichtere" und 4 "echte" identifiziert. 
 
 Nächste Wägung:
 1. Waagschale: 1 "potentiell leichtere", 2 "potentiell schwerere" ,
@@ -47,4 +47,6 @@ Symmetrischer Fall Wie A1, nur mit umgedrehten Vorzeichen:
 
 Entweder eine der 2 ungeprüften in der leicheren  Waagschale ist leichter oder die andere ungeprüfte in der schweren Waagschale ist schwerer. Eine weitere Wägung mit je einer der 2 ungeprüften in der leichteren Waagschale, nun in je einer Waagschale. Ist eine leichter, dann ist die Kugel daran die Falsche und sie ist leichter, wenn die Waagschalen gleich stehen, ist die andere, die bei der 2. Wägung in der schwereren Waagschale war die Falsche und sie ist schwerer.
 
-Zur allgemeinen Lösung kommt man um en Boolsches Konstrukt nicht erum, für jede Kugel gibt es 2 Hypothesen "leicht" und "schwer". Mit jeder Wägung kann man bestimmte Hypothesen ausschliessen. Theoretisch kann man alle möglichen Wägungen mit allen möglichen Ergebnissen analysieren und schauen für welche Wägung man wieviele Hypthesen man bei welchen Ergebnis (links, gleich, rechts) ausschliessen kenn. Für jede mögliche Wägung ergeben sich, je nach Ergebnis, potentiell 3 Werte an Auschlüssen. Die Wägungen werden durch das Minimun dieser 3 Werte gewichtet. Die Wägung mit dem höchsten Gewicht wird gemacht, das Ergebnis eingesammelt und dann gibt es eine neue Grundmenge von Hypthesen, das Ganze geht von vorn los.
+# Hypthesenansatz
+
+Zur allgemeinen Lösung kommt man um ein Boolsches Konstrukt nicht herum, für jede Kugel gibt es 2 Hypothesen "leicht" und "schwer". Mit jeder Wägung kann man bestimmte Hypothesen ausschliessen. Theoretisch kann man alle möglichen Wägungen mit allen möglichen Ergebnissen analysieren und schauen, für welche Wägung man wieviele Hypthesen man bei welchen Ergebnis (links, gleich, rechts) ausschliessen kenn. Für jede mögliche Wägung ergeben sich, je nach Ergebnis, potentiell 3 Werte an Auschlüssen. Die Wägungen werden durch das Minimun dieser 3 Werte gewichtet. Die Wägung mit dem höchsten Gewicht wird gemacht, das Ergebnis eingesammelt und dann gibt es eine neue Grundmenge von Hypthesen, das Ganze geht von vorn los.
