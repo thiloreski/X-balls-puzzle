@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>KI Rätsel: 12 Kugeln - Exakt 3 Wägungen</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 600px; text-align: center; }
+        .instruction-box { background: #eff6ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; color: #1e40af; border: 1px solid #bfdbfe; text-align: left; }
+        .scale-area { position: relative; height: 160px; margin: 1.5rem 0; border-bottom: 2px solid #e2e8f0; }
+        .beam { width: 100%; height: 10px; background: #475569; position: absolute; top: 50%; left: 0; transition: transform 0.7s ease-in-out; border-radius: 5px; transform-origin: center; }
+        .pan { width: 130px; min-height: 60px; border: 4px solid #475569; border-top: 0; position: absolute; top: 10px; border-radius: 0 0 65px 65px; background: rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
+        .left { left: 0; } .right { right: 0; }
+        .ball { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); color: white; font-size: 12px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; }
+        .btn { padding: 12px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
+        .btn-blue { background: #2563eb; } .btn-gray { background: #64748b; } .btn-red { background: #e11d48; } .btn-green { background: #16a34a; width: 100%; font-size: 1.1rem; }
+        .tilt-left { transform: rotate(-12deg); } .tilt-right { transform: rotate(12deg); }
+        #game-area { display: none; }
+        .storage-bin { margin-top:20px; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 15px; display:flex; flex-wrap:wrap; justify-content:center; min-height: 40px; background: #f8fafc; }
+        #log { font-size: 0.8rem; color: #64748b; margin-top: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="setup-area">
+        <h2>Das 12-Kugeln-Rätsel</h2>
+        <div class="instruction-box">
+            <b>Ziel:</b> Die KI findet die falsche Kugel in <b>maximal 3 Wägungen</b>.<br>
+            Nutzt mathematische Hypothesen-Eliminierung (Minimax).
+        </div>
+        <button id="start_trigger" class="btn btn-green">Starten</button>
+    </div>
+
+    <div id="game-area">
+        <div class="scale-area">
+            <div id="beam_element" class="beam">
+                <div class="pan left" id="p_left"></div>
+                <div class="pan right" id="p_right"></div>
+            </div>
+        </div>
+        
+        <h3 id="step_info" style="color: #2563eb; margin:0;">Wägung 1</h3>
+        <p id="instruction" style="font-weight: bold; margin: 10px 0;"></p>
+        
+        <div id="action_btns">
+            <button id="v_left" class="btn btn-blue">Links schwerer</button>
+            <button id="v_equal" class="btn btn-gray">Gleich</button>
+            <button id="v_right" class="btn btn-red">Rechts schwerer</button>
+        </div>
+
+        <div id="result_display" class="hidden" style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; color: #166534; font-weight: bold;"></div>
+        <div id="log"></div>
+        <button id="reload_btn" class="btn btn-gray hidden" style="margin-top:10px" onclick="location.reload()">Neustart</button>
+        
+        <div id="storage" class="storage-bin"></div>
+    </div>
+</div>
+
+<script type="py">
+from pyscript import document, window
+from pyodide.ffi import create_proxy
+
+class ThreeStepAI:
+    def __init__(self):
+        # 24 Hypothesen: (ID, Gewicht) -> 1=Schwerer, -1=Leichter
+        self.hypotheses = [(i, w) for i in range(1, 13) for w in [1, -1]]
+        self.step = 0
+        self.current_l = []
+        self.current_r = []
+        self.calculate_next()
+
+    def get_outcome(self, hyp, left, right):
+        ball, weight = hyp
+        if ball in left: return "L" if weight == 1 else "R"
+        if ball in right: return "R" if weight == 1 else "L"
+        return "E"
+
+    def calculate_next(self):
+        if len(self.hypotheses) <= 1:
+            self.finish()
+            return
+
+        self.step += 1
+        document.getElementById("step_info").innerText = f"Wägung {self.step}"
+        
+        # Suche die optimale Wägung
+        best_l, best_r = [], []
+        min_worst_case = 99
+        
+        suspects = list(set([h[0] for h in self.hypotheses]))
+        all_balls = list(range(1, 13))
+        safe = [b for b in all_balls if b not in suspects]
+
+        # Wir erzwingen im 1. Schritt 4 vs 4, da dies mathematisch für 12 Kugeln optimal ist
+        m_range = [4] if self.step == 1 else range(1, 5)
+
+        for m in m_range:
+            # Wir testen verschiedene Kombinationen von Verdächtigen
+            # Um Rechenlast im Browser zu begrenzen, nutzen wir eine gezielte Auswahl
+            for n_l in range(m + 1):
+                for n_r in range(m + 1):
+                    if n_l + n_r > len(suspects): continue
+                    
+                    l = suspects[:n_l]
+                    r = suspects[n_l:n_l+n_r]
+                    
+                    # Auffüllen mit sicheren Kugeln (Referenz-Kugeln)
+                    needed_l, needed_r = m - len(l), m - len(r)
+                    if needed_l + needed_r <= len(safe):
+                        l_final = l + safe[:needed_l]
+                        r_final = r + safe[needed_l:needed_l+needed_r]
+                        
+                        # Minimax-Check
+                        outcomes = {"L": 0, "R": 0, "E": 0}
+                        for h in self.hypotheses:
+                            outcomes[self.get_outcome(h, l_final, r_final)] += 1
+                        
+                        worst = max(outcomes.values())
+                        if worst < min_worst_case:
+                            min_worst_case = worst
+                            best_l, best_r = l_final, r_final
+                            # Wenn wir das theoretische Minimum erreichen (3^n), aufhören zu suchen
+                            if worst <= 3**(3-self.step): break
+
+        self.current_l, self.current_r = best_l, best_r
+        document.getElementById("instruction").innerText = f"KI wiegt {len(best_l)} gegen {len(best_r)} Kugeln"
+        document.getElementById("log").innerText += f"Wägung {self.step}: Mögliche Hypothesen übrig: {len(self.hypotheses)}\n"
+        self.draw()
+
+    def draw(self):
+        for i in range(1, 13):
+            el = document.getElementById(f"b_{i}")
+            if i in self.current_l: document.getElementById("p_left").appendChild(el)
+            elif i in self.current_r: document.getElementById("p_right").appendChild(el)
+            else: document.getElementById("storage").appendChild(el)
+        document.getElementById("beam_element").className = "beam"
+
+    def feedback(self, res_key):
+        beam = document.getElementById("beam_element")
+        beam.className = "beam tilt-left" if res_key == "left" else "beam tilt-right" if res_key == "right" else "beam"
+        
+        target = {"left": "L", "right": "R", "equal": "E"}[res_key]
+        self.hypotheses = [h for h in self.hypotheses if self.get_outcome(h, self.current_l, self.current_r) == target]
+        
+        window.setTimeout(create_proxy(self.calculate_next), 600)
+
+    def finish(self):
+        document.getElementById("action_btns").classList.add("hidden")
+        res_el = document.getElementById("result_display")
+        res_el.classList.remove("hidden")
+        document.getElementById("reload_btn").classList.remove("hidden")
+        if len(self.hypotheses) == 1:
+            b, w = self.hypotheses[0]
+            res_el.innerText = f"ERGEBNIS: Kugel {b} ist {'SCHWERER' if w==1 else 'LEICHTER'}!"
+        else:
+            res_el.innerText = "Keine eindeutige Lösung möglich (Eingabefehler?)"
+
+engine = None
+def start(e):
+    global engine
+    document.getElementById("setup-area").style.display = "none"
+    document.getElementById("game-area").style.display = "block"
+    store = document.getElementById("storage")
+    for i in range(1, 13):
+        ball = document.createElement("div")
+        ball.className = "ball"; ball.id = f"b_{i}"; ball.innerText = str(i)
+        store.appendChild(ball)
+    engine = ThreeStepAI()
+
+document.getElementById("start_trigger").onclick = create_proxy(start)
+document.getElementById("v_left").onclick = create_proxy(lambda e: engine.feedback("left"))
+document.getElementById("v_equal").onclick = create_proxy(lambda e: engine.feedback("equal"))
+document.getElementById("v_right").onclick = create_proxy(lambda e: engine.feedback("right"))
+</script>
+</body>
+</html>
+
