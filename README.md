@@ -27,7 +27,9 @@ Entweder ist die "potentiell schwerere" in der 2 Waagschale die Falsche und schw
 oder die "potentiell leichtere" in der 1 Waagschale ist die Falsche und leichter.
 Eine weiter Wägung einer der dieser Beiden mit einer "echten" zeigt das Ergebnis.
 
-## Szenatrio B) 4 zu 4 - Gleichgewicht in der ersten Wägung - 8 "echte" identifiziert.
+## Szenatrio B) 4 zu 4 - Gleichgewicht in der ersten Wägung
+
+Damit sind 8 "echte" identifiziert.
 
 Dann 2. Wägung mit: In der 1. Waagschale 1 der "echten", 2 der ungeprüften, andere Waagschale 2 der "echten", 1 ungeprüfte.
 
