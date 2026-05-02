@@ -1,7 +1,7 @@
 # X-balls-puzzle
 The 12-Ball Problem: Logic Puzzle Solved for Any Number of Balls
 
-Spiel erläutert für 12 Kugeln (beispiel andere Ablaufe auch möglich)
+Spiel erläutert für 12 Kugeln (Beispiel, andere Ablaufe auch möglich)
 
 Begin immer 1. Wägung: 4 zu 4 Kugeln
 
