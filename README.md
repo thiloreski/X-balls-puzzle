@@ -5,7 +5,9 @@ Spiel erläutert für 12 Kugeln (beispiel andere Ablaufe auch möglich)
 
 Begin immer 1. Wägung: 4 zu 4 Kugeln
 
-## Szenario A) 4 zu 4 - Eine der Waagschalen bei der initialen 4 zu 4 Wägung ist schwerer - damit sind 4 "potentiell schwerere", 4 "potentiell leichtere" und 4 "echten" identifiziert. 
+## Szenario A) 4 zu 4 - Eine der Waagschalen bei der initialen 4 zu 4 Wägung ist schwerer
+
+Damit sind 4 "potentiell schwerere", 4 "potentiell leichtere" und 4 "echten" identifiziert. 
 
 Nächste Wägung:
 1. Waagschale: 1 "potentiell leichtere", 2 "potentiell schwerere" ,
