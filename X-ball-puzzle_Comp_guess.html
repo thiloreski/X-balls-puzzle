@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>I will find the wrong ball</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 550px; text-align: center; }
+        .instruction-box { background: #eef2ff; padding: 18px; border-radius: 10px; margin-bottom: 20px; font-size: 0.95rem; color: #3730a3; line-height: 1.5; border: 1px solid #c7d2fe; text-align: left; }
+        .scale-area { position: relative; height: 160px; margin: 2rem 0; }
+        .beam { width: 100%; height: 8px; background: #475569; position: absolute; top: 50%; left: 0; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; transform-origin: center; }
+        .pan { width: 120px; min-height: 60px; border: 3px solid #475569; border-top: 0; position: absolute; top: 8px; border-radius: 0 0 55px 55px; background: rgba(0,0,0,0.03); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
+        .left { left: 0; } .right { right: 0; }
+        .ball { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; }
+        .btn { padding: 12px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; }
+        .btn-blue { background: #2563eb; } .btn-gray { background: #64748b; } .btn-red { background: #e11d48; } .btn-green { background: #16a34a; width: 100%; font-size: 1.1rem; }
+        .tilt-left { transform: rotate(-12deg); } .tilt-right { transform: rotate(12deg); }
+        #game-area { display: none; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="setup-area">
+        <h2 style="margin-top: 0;">I will find the wrong ball</h2>
+        <div class="instruction-box">
+            First, choose the total number of balls. Then, secretly decide for yourself which ball number is tampered with and whether it should be heavier or lighter than the others. The AI will now try to solve your riddle through logical weighing.
+        </div>
+        <p>Number of balls in the system:</p>
+        <input type="number" id="ball_input" value="12" style="font-size: 1.5rem; width: 100px; text-align: center; border: 2px solid #cbd5e1; border-radius: 8px; padding: 5px;"><br><br>
+        <button id="start_trigger" class="btn btn-green">Start AI Prediction</button>
+    </div>
+
+    <div id="game-area">
+        <div class="instruction-box" style="margin-bottom: 10px; background: #f8fafc; color: #475569; border-color: #e2e8f0; text-align: center; font-size: 0.9rem;">
+            Provide the scale result so the AI can learn.
+        </div>
+        <div id="max_info" style="font-weight: bold; color: #ef4444; margin-bottom: 10px; font-size: 0.9rem;"></div>
+        
+        <div class="scale-area">
+            <div id="beam_element" class="beam">
+                <div class="pan left" id="p_left"></div>
+                <div class="pan right" id="p_right"></div>
+            </div>
+        </div>
+        
+        <h3 id="step_info" style="color: #2563eb; margin: 0;"></h3>
+        <p id="instruction" style="font-weight: 500; color: #334155; margin-bottom: 20px;"></p>
+        
+        <div id="action_btns">
+            <button id="v_left" class="btn btn-blue">Left Heavier</button>
+            <button id="v_equal" class="btn btn-gray">Equal</button>
+            <button id="v_right" class="btn btn-red">Right Heavier</button>
+        </div>
+
+        <div id="result_display" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; color: #166534; font-weight: bold;"></div>
+        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">New Game</button>
+        
+        <div id="storage" style="margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:15px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
+    </div>
+</div>
+
+<script type="py">
+from pyscript import document, window
+from pyodide.ffi import create_proxy
+import math
+
+class GameController:
+    def __init__(self, n):
+        self.n = n
+        self.possibilities = []
+        for i in range(1, n + 1):
+            self.possibilities.append((i, "lighter"))
+            self.possibilities.append((i, "heavier"))
+        self.step = 0
+        self.max_w = math.ceil(math.log(2*n + 1, 3))
+        document.getElementById("max_info").innerText = f"Maximum weighings allowed: {self.max_w}"
+        self.current_l = []
+        self.current_r = []
+        self.render_next_step()
+
+    def render_next_step(self):
+        self.step += 1
+        if len(self.possibilities) <= 1:
+            self.show_solution()
+            return
+        
+        candidates = sorted(list(set([p[0] for p in self.possibilities])))
+        best_l, best_r, min_max = [], [], 999
+        
+        for m in range(1, (self.n // 2) + 1):
+            l, r = candidates[:m], candidates[m:2*m]
+            if not r: continue
+            counts = {"L":0, "R":0, "E":0}
+            for k, s in self.possibilities:
+                res = "E"
+                if k in l: res = "L" if s=="heavier" else "R"
+                elif k in r: res = "R" if s=="heavier" else "L"
+                counts[res] += 1
+            if max(counts.values()) < min_max:
+                min_max = max(counts.values())
+                best_l, best_r = l, r
+        
+        self.current_l, self.current_r = best_l, best_r
+        document.getElementById("step_info").innerText = f"Weighing {self.step}"
+        document.getElementById("instruction").innerText = f"AI Weighing: {len(best_l)} vs {len(best_r)} balls"
+        
+        for i in range(1, self.n + 1):
+            ball_el = document.getElementById(f"b_{i}")
+            if i in self.current_l: document.getElementById("p_left").appendChild(ball_el)
+            elif i in self.current_r: document.getElementById("p_right").appendChild(ball_el)
+            else: document.getElementById("storage").appendChild(ball_el)
+        document.getElementById("beam_element").className = "beam"
+
+    def handle_feedback(self, result_type):
+        beam = document.getElementById("beam_element")
+        if result_type == "left": beam.className = "beam tilt-left"
+        elif result_type == "right": beam.className = "beam tilt-right"
+        else: beam.className = "beam"
+        
+        mapping = {"left":"L", "right":"R", "equal":"E"}
+        target = mapping[result_type]
+        
+        self.possibilities = [
+            (k, s) for k, s in self.possibilities
+            if self.get_simulated_result(k, s) == target
+        ]
+        
+        window.setTimeout(create_proxy(self.render_next_step), 600)
+
+    def get_simulated_result(self, k, s):
+        if k in self.current_l: return "L" if s == "heavier" else "R"
+        if k in self.current_r: return "R" if s == "heavier" else "L"
+        return "E"
+
+    def show_solution(self):
+        res_el = document.getElementById("result_display")
+        res_el.classList.remove("hidden")
+        if not self.possibilities:
+            res_el.innerText = "Contradiction! Check your inputs."
+        else:
+            k, s = self.possibilities[0]
+            res_el.innerText = f"FOUND IT: Ball {k} is {s}!"
+        document.getElementById("action_btns").classList.add("hidden")
+        document.getElementById("reload_btn").classList.remove("hidden")
+
+game_instance = None
+
+def start_game(event):
+    global game_instance
+    try:
+        n = int(document.getElementById("ball_input").value)
+        document.getElementById("setup-area").classList.add("hidden")
+        document.getElementById("game-area").style.display = "block"
+        
+        storage = document.getElementById("storage")
+        for i in range(1, n + 1):
+            b = document.createElement("div")
+            b.className = "ball"
+            b.id = f"b_{i}"
+            b.innerText = str(i)
+            storage.appendChild(b)
+        
+        game_instance = GameController(n)
+    except Exception as e:
+        print(f"Error: {e}")
+
+document.getElementById("start_trigger").addEventListener("click", create_proxy(start_game))
+document.getElementById("v_left").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("left")))
+document.getElementById("v_equal").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("equal")))
+document.getElementById("v_right").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("right")))
+
+</script>
+</body>
+</html>
+
