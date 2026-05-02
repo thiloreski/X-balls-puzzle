@@ -27,38 +27,29 @@
     <div id="setup-area">
         <h2 style="margin-top: 0;">I will find the wrong ball</h2>
         <div class="instruction-box">
-            First, choose the total number of balls. Then, secretly decide for yourself which ball number is tampered with and whether it should be heavier or lighter than the others. The AI will now try to solve your riddle through logical weighing.
+            Enter the number of balls. Secretly choose one ball and decide if it is heavier or lighter. The AI will find it by asking for scale results.
         </div>
-        <p>Number of balls in the system:</p>
-        <input type="number" id="ball_input" value="12" style="font-size: 1.5rem; width: 100px; text-align: center; border: 2px solid #cbd5e1; border-radius: 8px; padding: 5px;"><br><br>
-        <button id="start_trigger" class="btn btn-green">Start AI Prediction</button>
+        <input type="number" id="ball_input" value="12" style="font-size: 1.5rem; width: 100px; text-align: center;"><br><br>
+        <button id="start_trigger" class="btn btn-green">Start AI</button>
     </div>
 
     <div id="game-area">
-        <div class="instruction-box" style="margin-bottom: 10px; background: #f8fafc; color: #475569; border-color: #e2e8f0; text-align: center; font-size: 0.9rem;">
-            Provide the scale result so the AI can learn.
-        </div>
-        <div id="max_info" style="font-weight: bold; color: #ef4444; margin-bottom: 10px; font-size: 0.9rem;"></div>
-        
+        <div id="max_info" style="font-weight: bold; color: #ef4444; margin-bottom: 10px;"></div>
         <div class="scale-area">
             <div id="beam_element" class="beam">
                 <div class="pan left" id="p_left"></div>
                 <div class="pan right" id="p_right"></div>
             </div>
         </div>
-        
-        <h3 id="step_info" style="color: #2563eb; margin: 0;"></h3>
-        <p id="instruction" style="font-weight: 500; color: #334155; margin-bottom: 20px;"></p>
-        
+        <h3 id="step_info" style="color: #2563eb;"></h3>
+        <p id="instruction" style="font-weight: 500;"></p>
         <div id="action_btns">
             <button id="v_left" class="btn btn-blue">Left Heavier</button>
             <button id="v_equal" class="btn btn-gray">Equal</button>
             <button id="v_right" class="btn btn-red">Right Heavier</button>
         </div>
-
-        <div id="result_display" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; color: #166534; font-weight: bold;"></div>
-        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">New Game</button>
-        
+        <div id="result_display" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; color: #166534; font-weight: bold; font-size: 1.2rem;"></div>
+        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">Restart</button>
         <div id="storage" style="margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:15px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
     </div>
 </div>
@@ -68,7 +59,7 @@ from pyscript import document, window
 from pyodide.ffi import create_proxy
 import math
 
-class GameController:
+class AIController:
     def __init__(self, n):
         self.n = n
         self.possibilities = []
@@ -77,122 +68,105 @@ class GameController:
             self.possibilities.append((i, "heavier"))
         self.step = 0
         self.max_w = math.ceil(math.log(2*n + 1, 3))
-        document.getElementById("max_info").innerText = f"Maximum weighings allowed: {self.max_w}"
+        document.getElementById("max_info").innerText = f"Target: Max {self.max_w} weighings"
         self.current_l = []
         self.current_r = []
-        self.render_next_step()
+        self.calculate_and_render()
 
-    def get_simulated_result(self, k, s, l_group, r_group):
-        if k in l_group: return "L" if s == "heavier" else "R"
-        if k in r_group: return "R" if s == "heavier" else "L"
+    def get_result(self, ball, state, l_group, r_group):
+        if ball in l_group: return "L" if state == "heavier" else "R"
+        if ball in r_group: return "R" if state == "heavier" else "L"
         return "E"
 
-    def render_next_step(self):
-        self.step += 1
-        
+    def calculate_and_render(self):
         if len(self.possibilities) <= 1:
             self.show_solution()
             return
+
+        self.step += 1
+        document.getElementById("step_info").innerText = f"Weighing {self.step}"
         
-        # Verbessertes Finden der optimalen Kugel-Kombination
+        candidates = list(set([p[0] for p in self.possibilities]))
         best_l, best_r = [], []
-        min_max_possibilities = 999
+        min_worst_case = 999
         
-        # Wir testen verschiedene Gruppengrößen 'm'
+        # Optimize split
         for m in range(1, (self.n // 2) + 1):
-            # Wir nehmen nicht einfach die ersten m Kugeln, 
-            # sondern versuchen m Kugeln aus den aktuell möglichen Kandidaten zu ziehen
-            possible_candidates = list(set([p[0] for p in self.possibilities]))
+            l, r = candidates[:m], candidates[m:2*m]
+            if not r or len(l) != len(r): continue
             
-            l = possible_candidates[:m]
-            r = possible_candidates[m:2*m]
+            counts = {"L": 0, "R": 0, "E": 0}
+            for b, s in self.possibilities:
+                counts[self.get_result(b, s, l, r)] += 1
             
-            if not r or len(l) != len(r):
-                continue
-                
-            outcomes = {"L": 0, "R": 0, "E": 0}
-            for k, s in self.possibilities:
-                res = self.get_simulated_result(k, s, l, r)
-                outcomes[res] += 1
-            
-            worst_case = max(outcomes.values())
-            if worst_case < min_max_possibilities:
-                min_max_possibilities = worst_case
+            worst = max(counts.values())
+            if worst < min_worst_case:
+                min_worst_case = worst
                 best_l, best_r = l, r
 
-        # Sicherheitscheck: Falls keine gute Aufteilung gefunden wurde (besonders am Ende)
-        if not best_l and len(self.possibilities) > 1:
-            # Fallback: Einfach die ersten beiden verfügbaren Kugeln vergleichen
-            p_c = list(set([p[0] for p in self.possibilities]))
-            best_l, best_r = [p_c[0]], [p_c[1]]
+        if not best_l: # Fallback
+            best_l, best_r = [candidates[0]], [candidates[1]]
 
         self.current_l, self.current_r = best_l, best_r
-        document.getElementById("step_info").innerText = f"Weighing {self.step}"
-        document.getElementById("instruction").innerText = f"AI Weighing: {len(best_l)} vs {len(best_r)} balls"
+        document.getElementById("instruction").innerText = f"Place {len(best_l)} balls on each side"
         
-        # UI Update
+        # Update UI
         for i in range(1, self.n + 1):
-            ball_el = document.getElementById(f"b_{i}")
-            if i in self.current_l: document.getElementById("p_left").appendChild(ball_el)
-            elif i in self.current_r: document.getElementById("p_right").appendChild(ball_el)
-            else: document.getElementById("storage").appendChild(ball_el)
-        document.getElementById("beam_element").className = "beam"
+            el = document.getElementById(f"b_{i}")
+            if i in self.current_l: document.getElementById("p_left").appendChild(el)
+            elif i in self.current_r: document.getElementById("p_right").appendChild(el)
+            else: document.getElementById("storage").appendChild(el)
 
-    def handle_feedback(self, result_type):
+    def handle_click(self, feedback):
+        # Update scale tilt
         beam = document.getElementById("beam_element")
-        if result_type == "left": beam.className = "beam tilt-left"
-        elif result_type == "right": beam.className = "beam tilt-right"
+        if feedback == "left": beam.className = "beam tilt-left"
+        elif feedback == "right": beam.className = "beam tilt-right"
         else: beam.className = "beam"
+
+        # Filter possibilities
+        map_code = {"left": "L", "right": "R", "equal": "E"}
+        target = map_code[feedback]
+        self.possibilities = [p for p in self.possibilities if self.get_result(p[0], p[1], self.current_l, self.current_r) == target]
         
-        mapping = {"left":"L", "right":"R", "equal":"E"}
-        target = mapping[result_type]
-        
-        # Filtere Möglichkeiten basierend auf dem Feedback
-        new_possibilities = [
-            (k, s) for k, s in self.possibilities
-            if self.get_simulated_result(k, s, self.current_l, self.current_r) == target
-        ]
-        
-        self.possibilities = new_possibilities
-        window.setTimeout(create_proxy(self.render_next_step), 600)
+        # Small delay to see the tilt before next step
+        window.setTimeout(create_proxy(self.calculate_and_render), 700)
 
     def show_solution(self):
+        document.getElementById("action_btns").classList.add("hidden")
+        document.getElementById("instruction").innerText = "Analysis complete."
         res_el = document.getElementById("result_display")
         res_el.classList.remove("hidden")
-        if not self.possibilities:
-            res_el.innerText = "Contradiction! Please refresh and try again."
-        else:
-            k, s = self.possibilities[0]
-            res_el.innerText = f"FOUND IT: Ball {k} is {s}!"
-        document.getElementById("action_btns").classList.add("hidden")
         document.getElementById("reload_btn").classList.remove("hidden")
-
-game_instance = None
-
-def start_game(event):
-    global game_instance
-    try:
-        n_str = document.getElementById("ball_input").value
-        n = int(n_str)
-        document.getElementById("setup-area").classList.add("hidden")
-        document.getElementById("game-area").style.display = "block"
         
-        storage = document.getElementById("storage")
-        for i in range(1, n + 1):
-            b = document.createElement("div")
-            b.className = "ball"
-            b.id = f"b_{i}"
-            b.innerText = str(i)
-            storage.appendChild(b)
-        
-        game_instance = GameController(n)
-    except Exception as e:
-        print(f"Error: {e}")
+        if len(self.possibilities) == 1:
+            ball, state = self.possibilities[0]
+            res_el.innerText = f"RESULT: Ball {ball} is {state.upper()}!"
+        else:
+            res_el.innerText = "Error: Logical contradiction. Please restart."
 
-document.getElementById("start_trigger").addEventListener("click", create_proxy(start_game))
-document.getElementById("v_left").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("left")))
-document.getElementById("v_equal").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("equal")))
-document.getElementById("v_right").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("right")))
+ai_game = None
+
+def start(event):
+    global ai_game
+    n = int(document.getElementById("ball_input").value)
+    document.getElementById("setup-area").classList.add("hidden")
+    document.getElementById("game-area").style.display = "block"
+    
+    store = document.getElementById("storage")
+    for i in range(1, n + 1):
+        b = document.createElement("div")
+        b.className = "ball"
+        b.id = f"b_{i}"
+        b.innerText = str(i)
+        store.appendChild(b)
+    
+    ai_game = AIController(n)
+
+document.getElementById("start_trigger").onclick = create_proxy(start)
+document.getElementById("v_left").onclick = create_proxy(lambda e: ai_game.handle_click("left"))
+document.getElementById("v_equal").onclick = create_proxy(lambda e: ai_game.handle_click("equal"))
+document.getElementById("v_right").onclick = create_proxy(lambda e: ai_game.handle_click("right"))
 </script>
 </body>
 </html>
