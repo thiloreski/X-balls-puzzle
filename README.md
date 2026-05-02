@@ -37,7 +37,9 @@ Dann 2. Wägung mit: In der 1. Waagschale 1 der "echten", 2 der ungeprüften, an
 
 Das heißt: Entweder eine der 2 ungeprüften in der schwereren  Waagschale ist schwerer oder die andere ungeprüfte in der anderen Waagschale ist leichter. Eine weitere Wägung mit je einer der 2 ungeprüften aus der schwereren Waagschale der 2. Wägung, nun in je einer Waagschale, zeigt as Ergebnis. Ist eine schwerer, dann ist die Kugel darin die falsche und sie ist schwerer, wenn die Waagschalen gleich stehen, ist die andere, die bei der 2. Wägung in der leichteren Waagschale war die Falsche und sie ist leichter.
 
-### B2) 2. Wägung Gleichgewicht: Die 4. ungeprüfte ist die Falsche! In einer weiteren Wägung mit einer "echten" kann ermittelt werden, ob diese schwerer oder leichter ist.
+### B2) 2. Wägung Gleichgewicht
+
+Die 4. ungeprüfte ist also die Falsche! In einer weiteren Wägung mit einer "echten" kann ermittelt werden, ob diese schwerer oder leichter ist.
 
 ### B3) 2 Wägung Ergebnis: 2. Waagschale schwerer!
 
