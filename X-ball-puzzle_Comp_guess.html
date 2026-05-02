@@ -1,187 +1,184 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>I will find the wrong ball</title>
+    <title>Universelles Kugel-Rätsel: Hypothesen-Logik</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
-        body { font-family: system-ui, sans-serif; background: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 550px; text-align: center; }
-        .instruction-box { background: #eef2ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; color: #3730a3; text-align: left; border: 1px solid #c7d2fe; }
-        .scale-area { position: relative; height: 160px; margin: 2rem 0; }
-        .beam { width: 100%; height: 8px; background: #475569; position: absolute; top: 50%; left: 0; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; transform-origin: center; }
-        .pan { width: 120px; min-height: 60px; border: 3px solid #475569; border-top: 0; position: absolute; top: 8px; border-radius: 0 0 55px 55px; background: rgba(0,0,0,0.03); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.05); width: 100%; max-width: 700px; text-align: center; }
+        .instruction-box { background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; color: #475569; text-align: left; border: 1px solid #e2e8f0; }
+        .scale-area { position: relative; height: 160px; margin: 1.5rem 0; border-bottom: 2px solid #f1f5f9; }
+        .beam { width: 100%; height: 8px; background: #334155; position: absolute; top: 50%; left: 0; transition: transform 0.6s ease-in-out; border-radius: 4px; transform-origin: center; }
+        .pan { width: 140px; min-height: 60px; border: 3px solid #334155; border-top: 0; position: absolute; top: 8px; border-radius: 0 0 70px 70px; background: rgba(0,0,0,0.02); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
         .left { left: 0; } .right { right: 0; }
-        .ball { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; }
-        .btn { padding: 12px 20px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; transition: opacity 0.2s; }
-        .btn-blue { background: #2563eb; } .btn-gray { background: #64748b; } .btn-red { background: #e11d48; } .btn-green { background: #16a34a; width: 100%; font-size: 1.1rem; }
-        .tilt-left { transform: rotate(-12deg); } .tilt-right { transform: rotate(12deg); }
+        .ball { width: 24px; height: 24px; border-radius: 50%; background: #2563eb; color: white; font-size: 10px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; }
+        .btn { padding: 10px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 6px; font-weight: bold; color: white; }
+        .btn-blue { background: #3b82f6; } .btn-gray { background: #94a3b8; } .btn-red { background: #ef4444; } .btn-green { background: #10b981; width: 100%; }
+        .tilt-left { transform: rotate(-10deg); } .tilt-right { transform: rotate(10deg); }
         #game-area { display: none; }
-        .hidden { display: none; }
+        .storage-bin { margin-top:20px; border: 2px dashed #e2e8f0; border-radius: 10px; padding: 10px; display:flex; flex-wrap:wrap; justify-content:center; background: #fcfcfc; }
+        #status-log { font-family: monospace; font-size: 0.75rem; color: #64748b; margin-top: 15px; text-align: left; background: #f8fafc; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div id="setup-area">
-        <h2>I will find the wrong ball</h2>
+        <h2>X-Kugel Hypothesen-Eliminierung</h2>
         <div class="instruction-box">
-            Basierend auf Hypothesen-Eliminierung: Jede Kugel könnte 'schwerer' oder 'leichter' sein. Die KI wählt die Wägung, die im schlechtesten Fall die meisten Hypothesen ausschließt.
+            Geben Sie die Anzahl der Kugeln an. Die KI berechnet für jeden Schritt die optimale Wägung, indem sie alle 2*N Hypothesen ("Kugel X ist schwerer/leichter") simuliert.
         </div>
-        <p>Anzahl Kugeln (Empfehlung: 12):</p>
-        <input type="number" id="ball_input" value="12" style="font-size: 1.5rem; width: 80px; text-align: center;"><br><br>
-        <button id="start_trigger" class="btn btn-green">KI-Suche starten</button>
+        <p>Anzahl der Kugeln:</p>
+        <input type="number" id="ball_count" value="12" style="font-size: 1.2rem; width: 80px; text-align: center; border: 1px solid #cbd5e1; border-radius: 5px; padding: 5px;"><br><br>
+        <button id="start_btn" class="btn btn-green">KI-Berechnung starten</button>
     </div>
 
     <div id="game-area">
-        <div id="max_info" style="font-weight: bold; color: #ef4444; margin-bottom: 10px;"></div>
         <div class="scale-area">
             <div id="beam_element" class="beam">
                 <div class="pan left" id="p_left"></div>
                 <div class="pan right" id="p_right"></div>
             </div>
         </div>
-        <h3 id="step_info" style="color: #2563eb; margin:0;"></h3>
-        <p id="instruction" style="font-weight: 500; margin-top:5px;"></p>
+        <h3 id="step_info"></h3>
+        <p id="instruction"></p>
         <div id="action_btns">
             <button id="v_left" class="btn btn-blue">Links schwerer</button>
-            <button id="v_equal" class="btn btn-gray">Gleichgewicht</button>
+            <button id="v_equal" class="btn btn-gray">Gleich</button>
             <button id="v_right" class="btn btn-red">Rechts schwerer</button>
         </div>
-        <div id="result_display" class="hidden" style="margin: 20px 0; padding: 15px; background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; color: #166534; font-weight: bold; font-size: 1.1rem;"></div>
-        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">Neustart</button>
-        <div id="storage" style="margin-top:20px; border-top: 1px solid #e2e8f0; padding-top:15px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
+        <div id="result_display" class="hidden" style="margin-top:20px; padding:15px; background:#ecfdf5; border:2px solid #10b981; color:#065f46; font-weight:bold; border-radius:8px;"></div>
+        <button id="reload_btn" class="btn btn-gray hidden" style="margin-top:10px" onclick="location.reload()">Neustart</button>
+        <div id="status-log"></div>
+        <div id="storage" class="storage-bin"></div>
     </div>
 </div>
 
 <script type="py">
 from pyscript import document, window
 from pyodide.ffi import create_proxy
-import itertools
+import math
 
-class LogicEngine:
+class UniversalLogicAI:
     def __init__(self, n):
         self.n = n
-        # Hypothesenraum: (Kugel_ID, Typ) -> 1=Schwerer, -1=Leichter
-        self.hypotheses = []
-        for i in range(1, n + 1):
-            self.hypotheses.append((i, 1))  # Kugel i ist schwerer
-            self.hypotheses.append((i, -1)) # Kugel i ist leichter
+        # Jede Kugel kann schwerer (+1) oder leichter (-1) sein
+        self.hypotheses = [(i, w) for i in range(1, n + 1) for w in [1, -1]]
         self.step = 0
         self.current_l = []
         self.current_r = []
-        self.calculate_next_move()
+        self.log_msg(f"Initialisiert mit {len(self.hypotheses)} Hypothesen.")
+        self.calculate_next()
 
-    def simulate_weighing(self, hypothesis, left_group, right_group):
-        ball_id, weight_type = hypothesis
-        left_weight = 0
-        right_weight = 0
-        if ball_id in left_group: left_weight = weight_type
-        if ball_id in right_group: right_weight = weight_type
-        
-        if left_weight > right_weight: return "L"
-        if right_weight > left_weight: return "R"
+    def log_msg(self, text):
+        log_el = document.getElementById("status-log")
+        log_el.innerText += text + "\n"
+
+    def get_outcome(self, hyp, left, right):
+        ball, weight = hyp
+        l_sum = weight if ball in left else 0
+        r_sum = weight if ball in right else 0
+        if l_sum > r_sum: return "L"
+        if r_sum > l_sum: return "R"
         return "E"
 
-    def calculate_next_move(self):
+    def calculate_next(self):
         if len(self.hypotheses) <= 1:
-            self.show_solution()
+            self.finish()
             return
 
         self.step += 1
         document.getElementById("step_info").innerText = f"Wägung {self.step}"
         
-        best_l, best_r = [], []
-        min_max_remaining = 999
+        suspects = list(set([h[0] for h in self.hypotheses]))
+        all_balls = list(range(1, self.n + 1))
+        safe = [b for b in all_balls if b not in suspects]
         
-        # Wir prüfen mögliche Wägungs-Größen (m vs m)
-        # Um Rechenleistung zu sparen, limitieren wir die Suche bei hohen Kugelzahlen, 
-        # aber für 12 Kugeln ist es exakt.
-        for m in range(1, (self.n // 2) + 1):
-            # Wir generieren eine sinnvolle Test-Wägung
-            # Strategie: Wir nehmen eine Mischung aus "Verdächtigen" und "Sicheren"
-            suspect_balls = list(set([h[0] for h in self.hypotheses]))
-            all_balls = list(range(1, self.n + 1))
-            
-            # Da wir nicht alle Kombinationen (2^12) prüfen können, 
-            # nutzen wir eine Heuristik: Wir verteilen die aktuellen Verdächtigen 
-            # gleichmäßig auf links, rechts und weg.
-            l = suspect_balls[:m]
-            r = suspect_balls[m:2*m]
-            
-            # Falls Schalen ungleich, mit "sicheren" Kugeln auffüllen
-            if len(l) < m or len(r) < m:
-                safe_balls = [b for b in all_balls if b not in suspect_balls]
-                while len(l) < m and safe_balls: l.append(safe_balls.pop())
-                while len(r) < m and safe_balls: r.append(safe_balls.pop())
-            
-            if len(l) != len(r) or not r: continue
-
-            # Minimax-Berechnung
-            outcomes = {"L": 0, "R": 0, "E": 0}
-            for h in self.hypotheses:
-                res = self.simulate_weighing(h, l, r)
-                outcomes[res] += 1
-            
-            worst_case = max(outcomes.values())
-            if worst_case < min_max_remaining:
-                min_max_remaining = worst_case
-                best_l, best_r = l, r
+        best_l, best_r = [], []
+        min_worst_case = len(self.hypotheses) + 1
+        
+        # Minimax Suche: Wir optimieren die Kugel-Verteilung
+        # Wir testen m vs m Kugeln
+        max_m = self.n // 2
+        for m in range(1, max_m + 1):
+            # Heuristik: Wir verteilen Verdächtige auf L, R und Neutral
+            # Um Rechenzeit zu sparen bei großen N, testen wir strategische Verteilungen
+            for n_l in range(min(m, len(suspects)) + 1):
+                n_r_max = min(m, len(suspects) - n_l)
+                for n_r in range(n_r_max + 1):
+                    l_susp = suspects[:n_l]
+                    r_susp = suspects[n_l : n_l + n_r]
+                    
+                    # Auffüllen mit sicheren Kugeln (Referenz-Theorie)
+                    needed_l, needed_r = m - len(l_susp), m - len(r_susp)
+                    if needed_l + needed_r <= len(safe):
+                        l_final = l_susp + safe[:needed_l]
+                        r_final = r_susp + safe[needed_l : needed_l + needed_r]
+                        
+                        outcomes = {"L": 0, "R": 0, "E": 0}
+                        for h in self.hypotheses:
+                            outcomes[self.get_outcome(h, l_final, r_final)] += 1
+                        
+                        worst = max(outcomes.values())
+                        if worst < min_worst_case:
+                            min_worst_case = worst
+                            best_l, best_r = l_final, r_final
+                            if worst <= math.ceil(len(self.hypotheses) / 3): break
 
         self.current_l, self.current_r = best_l, best_r
-        document.getElementById("instruction").innerText = f"KI legt {len(best_l)} vs {len(best_r)} Kugeln auf."
-        self.update_ui()
+        document.getElementById("instruction").innerText = f"KI vergleicht {len(best_l)} gegen {len(best_r)} Kugeln."
+        self.log_msg(f"Wägung {self.step}: Bester Worst-Case = {min_worst_case} Hypothesen.")
+        self.draw()
 
-    def update_ui(self):
+    def draw(self):
         for i in range(1, self.n + 1):
             el = document.getElementById(f"b_{i}")
             if i in self.current_l: document.getElementById("p_left").appendChild(el)
             elif i in self.current_r: document.getElementById("p_right").appendChild(el)
             else: document.getElementById("storage").appendChild(el)
+        document.getElementById("beam_element").className = "beam"
 
-    def process_result(self, feedback):
+    def apply_feedback(self, res):
+        target = {"left": "L", "right": "R", "equal": "E"}[res]
         beam = document.getElementById("beam_element")
-        beam.className = f"beam tilt-{feedback}" if feedback != "equal" else "beam"
+        beam.className = f"beam tilt-{res}" if res != "equal" else "beam"
         
-        target = {"left": "L", "right": "R", "equal": "E"}[feedback]
-        # Filter Hypothesen: Behalte nur die, die mit dem Ergebnis kompatibel sind
-        self.hypotheses = [h for h in self.hypotheses if self.simulate_weighing(h, self.current_l, self.current_r) == target]
+        self.hypotheses = [h for h in self.hypotheses if self.get_outcome(h, self.current_l, self.current_r) == target]
+        self.log_msg(f"Feedback erhalten: {target}. Verbleibende Hypothesen: {len(self.hypotheses)}")
         
-        window.setTimeout(create_proxy(self.calculate_next_move), 600)
+        window.setTimeout(create_proxy(self.calculate_next), 600)
 
-    def show_solution(self):
-        document.getElementById("action_btns").classList.add("hidden")
+    def finish(self):
+        document.getElementById("action_btns").style.display = "none"
         res_el = document.getElementById("result_display")
         res_el.classList.remove("hidden")
         document.getElementById("reload_btn").classList.remove("hidden")
         if len(self.hypotheses) == 1:
-            id, weight = self.hypotheses[0]
-            w_str = "SCHWERER" if weight == 1 else "LEICHTER"
-            res_el.innerText = f"GEFUNDEN: Kugel {id} ist {w_str}!"
+            b, w = self.hypotheses[0]
+            res_el.innerText = f"ERGEBNIS: Kugel {b} ist {'SCHWERER' if w==1 else 'LEICHTER'}!"
         else:
-            res_el.innerText = "Widerspruch in der Eingabe! Bitte neu starten."
+            res_el.innerText = "Widerspruch: Keine Hypothese passt zu Ihren Angaben."
 
-engine = None
+active_logic = None
 
-def start(e):
-    global engine
-    n = int(document.getElementById("ball_input").value)
-    document.getElementById("setup-area").classList.add("hidden")
+def start_logic(e):
+    global active_logic
+    n = int(document.getElementById("ball_count").value)
+    document.getElementById("setup-area").style.display = "none"
     document.getElementById("game-area").style.display = "block"
     store = document.getElementById("storage")
     for i in range(1, n + 1):
         b = document.createElement("div")
-        b.className = "ball"
-        b.id = f"b_{i}"
-        b.innerText = str(i)
+        b.className = "ball"; b.id = f"b_{i}"; b.innerText = str(i)
         store.appendChild(b)
-    engine = LogicEngine(n)
+    active_logic = UniversalLogicAI(n)
 
-document.getElementById("start_trigger").onclick = create_proxy(start)
-document.getElementById("v_left").onclick = create_proxy(lambda e: engine.process_result("left"))
-document.getElementById("v_equal").onclick = create_proxy(lambda e: engine.process_result("equal"))
-document.getElementById("v_right").onclick = create_proxy(lambda e: engine.process_result("right"))
+document.getElementById("start_btn").onclick = create_proxy(start_logic)
+document.getElementById("v_left").onclick = create_proxy(lambda e: active_logic.apply_feedback("left"))
+document.getElementById("v_equal").onclick = create_proxy(lambda e: active_logic.apply_feedback("equal"))
+document.getElementById("v_right").onclick = create_proxy(lambda e: active_logic.apply_feedback("right"))
 </script>
 </body>
 </html>
