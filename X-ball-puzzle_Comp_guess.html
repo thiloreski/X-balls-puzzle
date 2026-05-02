@@ -82,32 +82,55 @@ class GameController:
         self.current_r = []
         self.render_next_step()
 
+    def get_simulated_result(self, k, s, l_group, r_group):
+        if k in l_group: return "L" if s == "heavier" else "R"
+        if k in r_group: return "R" if s == "heavier" else "L"
+        return "E"
+
     def render_next_step(self):
         self.step += 1
+        
         if len(self.possibilities) <= 1:
             self.show_solution()
             return
         
-        candidates = sorted(list(set([p[0] for p in self.possibilities])))
-        best_l, best_r, min_max = [], [], 999
+        # Verbessertes Finden der optimalen Kugel-Kombination
+        best_l, best_r = [], []
+        min_max_possibilities = 999
         
+        # Wir testen verschiedene Gruppengrößen 'm'
         for m in range(1, (self.n // 2) + 1):
-            l, r = candidates[:m], candidates[m:2*m]
-            if not r: continue
-            counts = {"L":0, "R":0, "E":0}
+            # Wir nehmen nicht einfach die ersten m Kugeln, 
+            # sondern versuchen m Kugeln aus den aktuell möglichen Kandidaten zu ziehen
+            possible_candidates = list(set([p[0] for p in self.possibilities]))
+            
+            l = possible_candidates[:m]
+            r = possible_candidates[m:2*m]
+            
+            if not r or len(l) != len(r):
+                continue
+                
+            outcomes = {"L": 0, "R": 0, "E": 0}
             for k, s in self.possibilities:
-                res = "E"
-                if k in l: res = "L" if s=="heavier" else "R"
-                elif k in r: res = "R" if s=="heavier" else "L"
-                counts[res] += 1
-            if max(counts.values()) < min_max:
-                min_max = max(counts.values())
+                res = self.get_simulated_result(k, s, l, r)
+                outcomes[res] += 1
+            
+            worst_case = max(outcomes.values())
+            if worst_case < min_max_possibilities:
+                min_max_possibilities = worst_case
                 best_l, best_r = l, r
-        
+
+        # Sicherheitscheck: Falls keine gute Aufteilung gefunden wurde (besonders am Ende)
+        if not best_l and len(self.possibilities) > 1:
+            # Fallback: Einfach die ersten beiden verfügbaren Kugeln vergleichen
+            p_c = list(set([p[0] for p in self.possibilities]))
+            best_l, best_r = [p_c[0]], [p_c[1]]
+
         self.current_l, self.current_r = best_l, best_r
         document.getElementById("step_info").innerText = f"Weighing {self.step}"
         document.getElementById("instruction").innerText = f"AI Weighing: {len(best_l)} vs {len(best_r)} balls"
         
+        # UI Update
         for i in range(1, self.n + 1):
             ball_el = document.getElementById(f"b_{i}")
             if i in self.current_l: document.getElementById("p_left").appendChild(ball_el)
@@ -124,23 +147,20 @@ class GameController:
         mapping = {"left":"L", "right":"R", "equal":"E"}
         target = mapping[result_type]
         
-        self.possibilities = [
+        # Filtere Möglichkeiten basierend auf dem Feedback
+        new_possibilities = [
             (k, s) for k, s in self.possibilities
-            if self.get_simulated_result(k, s) == target
+            if self.get_simulated_result(k, s, self.current_l, self.current_r) == target
         ]
         
+        self.possibilities = new_possibilities
         window.setTimeout(create_proxy(self.render_next_step), 600)
-
-    def get_simulated_result(self, k, s):
-        if k in self.current_l: return "L" if s == "heavier" else "R"
-        if k in self.current_r: return "R" if s == "heavier" else "L"
-        return "E"
 
     def show_solution(self):
         res_el = document.getElementById("result_display")
         res_el.classList.remove("hidden")
         if not self.possibilities:
-            res_el.innerText = "Contradiction! Check your inputs."
+            res_el.innerText = "Contradiction! Please refresh and try again."
         else:
             k, s = self.possibilities[0]
             res_el.innerText = f"FOUND IT: Ball {k} is {s}!"
@@ -152,7 +172,8 @@ game_instance = None
 def start_game(event):
     global game_instance
     try:
-        n = int(document.getElementById("ball_input").value)
+        n_str = document.getElementById("ball_input").value
+        n = int(n_str)
         document.getElementById("setup-area").classList.add("hidden")
         document.getElementById("game-area").style.display = "block"
         
@@ -172,8 +193,6 @@ document.getElementById("start_trigger").addEventListener("click", create_proxy(
 document.getElementById("v_left").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("left")))
 document.getElementById("v_equal").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("equal")))
 document.getElementById("v_right").addEventListener("click", create_proxy(lambda e: game_instance.handle_feedback("right")))
-
 </script>
 </body>
 </html>
-
