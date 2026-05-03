@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Challenge - Animated Logic Engine</title>
+    <title>User Challenge - Solution Logic</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
@@ -17,50 +17,32 @@
 
         .game-layout { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
         
-        /* Scale Section & Animations */
+        /* Scale Section */
         .scale-section { text-align: center; background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
         .scale-area { position: relative; height: 160px; margin: 40px 0; border-bottom: 3px solid #e2e8f0; }
-        .beam { 
-            width: 100%; height: 10px; background: #334155; position: absolute; top: 50%; left: 0; 
-            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); 
-            border-radius: 5px; transform-origin: center; 
-        }
-        .pan { 
-            width: 130px; min-height: 60px; border: 4px solid #334155; border-top: 0; 
-            position: absolute; top: 10px; border-radius: 0 0 65px 65px; 
-            background: rgba(0,0,0,0.03); display: flex; flex-wrap: wrap; 
-            justify-content: center; padding: 5px; transition: transform 0.7s;
-        }
+        .beam { width: 100%; height: 10px; background: #334155; position: absolute; top: 50%; left: 0; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 5px; transform-origin: center; }
+        .pan { width: 130px; min-height: 60px; border: 4px solid #334155; border-top: 0; position: absolute; top: 10px; border-radius: 0 0 65px 65px; background: rgba(0,0,0,0.03); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
         .left { left: 0; } .right { right: 0; }
         
-        /* Ball Styling */
-        .ball { 
-            width: 32px; height: 32px; border-radius: 50%; 
-            background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); 
-            color: white; font-size: 12px; display: flex; align-items: center; 
-            justify-content: center; margin: 3px; font-weight: bold; 
-            cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.15); 
-            transition: transform 0.2s, opacity 0.3s; 
-        }
-        .ball:hover { transform: scale(1.15); background: #2563eb; }
+        .ball { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); color: white; font-size: 12px; display: flex; align-items: center; justify-content: center; margin: 3px; font-weight: bold; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.15); }
+        .tilt-left { transform: rotate(-10deg); } .tilt-right { transform: rotate(10deg); }
         
-        .tilt-left { transform: rotate(-10deg); }
-        .tilt-right { transform: rotate(10deg); }
-        
-        /* Side Panel */
+        /* Sidebar & Spoiler */
         .side-panel { display: flex; flex-direction: column; gap: 15px; }
-        .info-box { background: #eff6ff; padding: 15px; border-radius: 10px; border: 1px solid #bfdbfe; font-size: 0.9rem; }
-        .log-box { background: #1e293b; color: #38bdf8; font-family: 'Consolas', monospace; padding: 12px; border-radius: 8px; height: 250px; overflow-y: auto; font-size: 0.8rem; text-align: left; }
+        .spoiler-box { background: #f1f5f9; border-radius: 10px; padding: 10px; border: 1px solid #cbd5e1; }
+        .spoiler-content { display: none; margin-top: 10px; font-size: 0.85rem; color: #475569; font-style: italic; border-top: 1px solid #cbd5e1; padding-top: 5px; }
+        .log-box { background: #1e293b; color: #38bdf8; font-family: 'Consolas', monospace; padding: 12px; border-radius: 8px; height: 200px; overflow-y: auto; font-size: 0.8rem; text-align: left; }
         
-        .storage-area { 
-            margin-top: 20px; padding: 15px; background: #f8fafc; border: 2px dashed #cbd5e1; 
-            border-radius: 10px; display: flex; flex-wrap: wrap; min-height: 80px; 
-            justify-content: center; align-content: flex-start; gap: 5px;
-        }
+        .storage-area { margin-top: 20px; padding: 15px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; flex-wrap: wrap; min-height: 80px; justify-content: center; gap: 5px; }
         
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; text-decoration: none; transition: 0.2s; }
-        .btn-gray { background: #64748b; } .btn-green { background: #10b981; } .btn-blue { background: #3b82f6; width: 100%; font-size: 1.1rem; }
+        /* Final Solution UI */
+        #solve-ui { background: #fff7ed; border: 2px solid #f97316; padding: 20px; border-radius: 12px; margin-top: 20px; }
+        .input-group { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; text-decoration: none; transition: 0.2s; }
+        .btn-gray { background: #64748b; } .btn-green { background: #10b981; } .btn-blue { background: #3b82f6; } .btn-orange { background: #f97316; }
         .hidden { display: none !important; }
+        .locked { pointer-events: none; opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -72,41 +54,56 @@
 
     <div id="setup-area" style="text-align: center;">
         <h2>User Challenge: Find the Imposter</h2>
-        <p>One ball has a different weight. Can you find it?</p>
-        <div style="margin: 20px 0;">
-            <input type="number" id="ball_count" value="12" min="3" max="30" style="padding:10px; width:80px; text-align:center; font-size:1.2rem;">
-        </div>
-        <button id="start_btn" class="btn btn-green">Start Challenge</button>
+        <p>Set number of balls to generate a new puzzle:</p>
+        <input type="number" id="ball_count" value="12" min="3" max="30" style="padding:8px; width:70px; text-align:center;">
+        <button id="start_btn" class="btn btn-green" style="margin-left: 10px;">Start Game</button>
     </div>
 
     <div id="game-area" class="hidden">
         <div class="header-stats">
-            <div class="stat-card"><span class="stat-label">Step</span><span id="stat_step" class="stat-value">0</span></div>
-            <div class="stat-card"><span class="stat-label">Target Max</span><span id="stat_max" class="stat-value">3</span></div>
-            <div class="stat-card"><span class="stat-label">Hypotheses</span><span id="stat_hyp" class="stat-value">24</span></div>
+            <div class="stat-card"><span class="stat-label">Steps</span><span id="stat_step" class="stat-value">0</span></div>
+            <div class="stat-card"><span class="stat-label">Limit</span><span id="stat_max" class="stat-value">3</span></div>
+            <div class="stat-card"><span class="stat-label">Suspects</span><span id="stat_hyp" class="stat-value">24</span></div>
         </div>
 
         <div class="game-layout">
-            <div class="scale-section">
+            <div class="scale-section" id="interaction-zone">
                 <div class="scale-area">
                     <div id="beam_element" class="beam">
                         <div class="pan left" id="pan_l"></div>
                         <div class="pan right" id="pan_r"></div>
                     </div>
                 </div>
-                <button id="weigh_btn" class="btn btn-blue">Weigh Balls</button>
+                <button id="weigh_btn" class="btn btn-blue" style="width: 200px;">Weigh Now</button>
                 <div id="storage" class="storage-area"></div>
             </div>
 
             <div class="side-panel">
-                <div class="info-box">
-                    <strong style="color: #2563eb;">AI Recommendation:</strong><br>
-                    <span id="ai_tip">Initializing...</span>
+                <div class="spoiler-box">
+                    <button class="btn btn-gray" style="width: 100%; font-size: 0.8rem;" onclick="document.getElementById('spoiler').style.display = (document.getElementById('spoiler').style.display == 'block' ? 'none' : 'block')">
+                        Toggle AI Spoiler
+                    </button>
+                    <div id="spoiler" class="spoiler-content">AI Suggestion: <span id="ai_tip">...</span></div>
                 </div>
                 <div class="log-box" id="status_log"></div>
-                <button id="solve_btn" class="btn btn-green" style="width:100%">I know the answer!</button>
             </div>
         </div>
+
+        <!-- Inline Solution Interface -->
+        <div id="solve-ui" class="hidden">
+            <h3 style="margin-top:0; color:#c2410c;">Final Guess Required!</h3>
+            <p>You have reached the weighing limit or want to solve now. Identify the culprit:</p>
+            <div class="input-group">
+                <input type="number" id="final_id" placeholder="Ball ID" style="width:80px; padding:8px;">
+                <select id="final_weight" style="padding:8px; border-radius:8px;">
+                    <option value="1">is Heavier</option>
+                    <option value="-1">is Lighter</option>
+                </select>
+                <button id="confirm_solve_btn" class="btn btn-orange">Confirm Result</button>
+            </div>
+        </div>
+        
+        <button id="restart_btn" class="btn btn-gray hidden" style="margin-top:20px;" onclick="location.reload()">New Challenge</button>
     </div>
 </div>
 
@@ -116,7 +113,7 @@ import math
 from pyscript import document, window
 from pyodide.ffi import create_proxy
 
-class InteractiveGame:
+class UserChallenge:
     def __init__(self, n):
         self.n = n
         self.step = 0
@@ -124,118 +121,117 @@ class InteractiveGame:
         self.hypotheses = [(i, w) for i in range(1, n + 1) for w in [1, -1]]
         self.secret = random.choice(self.hypotheses)
         
-        self.init_balls()
-        self.update_ui()
-        self.log(f"Challenge started for {n} balls.")
+        self.init_ui()
+        self.update_stats()
+        self.log(f"Puzzle: Find 1 ball out of {n} in max {self.max_steps} steps.")
 
-    def init_balls(self):
+    def init_ui(self):
         storage = document.getElementById("storage")
         storage.innerHTML = ""
         for i in range(1, self.n + 1):
-            ball = document.createElement("div")
-            ball.className = "ball"
-            ball.id = f"ball_{i}"
-            ball.innerText = str(i)
-            ball.onclick = create_proxy(lambda e, id=i: self.cycle_ball(id))
-            storage.appendChild(ball)
+            b = document.createElement("div")
+            b.className = "ball"; b.id = f"ball_{i}"; b.innerText = str(i)
+            b.onclick = create_proxy(lambda e, id=i: self.move_ball(id))
+            storage.appendChild(b)
         self.sort_storage()
 
-    def cycle_ball(self, ball_id):
-        ball = document.getElementById(f"ball_{ball_id}")
-        # Reset tilt when any ball is moved
+    def move_ball(self, bid):
+        ball = document.getElementById(f"ball_{bid}")
+        l_pan = document.getElementById("pan_l")
+        r_pan = document.getElementById("pan_r")
+        store = document.getElementById("storage")
         document.getElementById("beam_element").className = "beam"
-        
-        if ball.parentElement.id == "storage":
-            document.getElementById("pan_l").appendChild(ball)
-        elif ball.parentElement.id == "pan_l":
-            document.getElementById("pan_r").appendChild(ball)
+
+        if ball.parentElement.id == "storage": l_pan.appendChild(ball)
+        elif ball.parentElement.id == "pan_l": r_pan.appendChild(ball)
         else:
-            document.getElementById("storage").appendChild(ball)
+            store.appendChild(ball)
             self.sort_storage()
 
     def sort_storage(self):
         storage = document.getElementById("storage")
-        balls = list(storage.children)
-        # Sort by ID (numeric value of innerText)
-        balls.sort(key=lambda x: int(x.innerText))
-        for b in balls:
-            storage.appendChild(b)
+        balls = sorted(list(storage.children), key=lambda x: int(x.innerText))
+        for b in balls: storage.appendChild(b)
 
     def log(self, msg):
         log_el = document.getElementById("status_log")
         log_el.innerHTML += f"<div>> {msg}</div>"
         log_el.scrollTop = log_el.scrollHeight
 
-    def update_ui(self):
+    def update_stats(self):
         document.getElementById("stat_step").innerText = str(self.step)
         document.getElementById("stat_max").innerText = str(self.max_steps)
         document.getElementById("stat_hyp").innerText = str(len(self.hypotheses))
         
-        tip_el = document.getElementById("ai_tip")
+        # Calculate AI Tip (Brute-force next best split)
         suspects = list(set([h[0] for h in self.hypotheses]))
-        if len(self.hypotheses) == 1:
-            tip_el.innerText = "Solution identified! Use 'I know the answer'."
-        else:
-            tip_el.innerText = f"Focus on balls: {sorted(suspects)}"
+        m = max(1, len(suspects) // 3)
+        document.getElementById("ai_tip").innerText = f"Try weighing {m} suspects vs {m} suspects."
+
+        if self.step >= self.max_steps:
+            self.force_solve()
 
     def weigh(self, e):
         l_ids = [int(b.innerText) for b in document.getElementById("pan_l").children]
         r_ids = [int(b.innerText) for b in document.getElementById("pan_r").children]
         
         if len(l_ids) != len(r_ids) or len(l_ids) == 0:
-            window.alert("Pans must be equal and not empty!")
+            window.alert("Both sides must be equal and not empty!")
             return
 
         self.step += 1
+        sid, sw = self.secret
+        l_mass = sw if sid in l_ids else 0
+        r_mass = sw if sid in r_ids else 0
         
-        # Real Physics Calculation
-        target_id, target_w = self.secret
-        l_mass = target_w if target_id in l_ids else 0
-        r_mass = target_w if target_id in r_ids else 0
-        
-        res = "equal"
-        if l_mass > r_mass: res = "left"
-        elif r_mass > l_mass: res = "right"
-        
-        # Animate Scale
+        res = "equal" if l_mass == r_mass else "left" if l_mass > r_mass else "right"
         document.getElementById("beam_element").className = f"beam tilt-{res}"
         
-        # Filter Logic
         code = {"left":"L", "right":"R", "equal":"E"}[res]
-        before = len(self.hypotheses)
-        self.hypotheses = [h for h in self.hypotheses if self.check_outcome(h, l_ids, r_ids) == code]
+        self.hypotheses = [h for h in self.hypotheses if self.simulate(h, l_ids, r_ids) == code]
         
-        self.log(f"Step {self.step}: Result {res.upper()}. ({before - len(self.hypotheses)} hypotheses eliminated)")
-        self.update_ui()
+        self.log(f"Step {self.step}: {res.upper()}. Remaining: {len(self.hypotheses)}")
+        self.update_stats()
 
-    def check_outcome(self, hyp, left, right):
-        b, w = hyp
-        l = w if b in left else 0
-        r = w if b in right else 0
-        return "L" if l > r else "R" if r > l else "E"
+    def simulate(self, h, l, r):
+        ball, weight = h
+        lm = weight if ball in l else 0
+        rm = weight if ball in r else 0
+        return "L" if lm > rm else "R" if rm > lm else "E"
 
-    def solve(self, e):
-        ans = window.prompt("Which Ball ID?")
-        if not ans: return
-        w = window.prompt("Is it (H)eavy or (L)ight?").upper()
+    def force_solve(self):
+        document.getElementById("interaction-zone").classList.add("locked")
+        document.getElementById("weigh_btn").classList.add("hidden")
+        document.getElementById("solve-ui").classList.remove("hidden")
+        self.log("Limit reached! Identification required.")
+
+    def final_guess(self, e):
+        gid = int(document.getElementById("final_id").value)
+        gw = int(document.getElementById("final_weight").value)
         
-        if (int(ans), 1 if w == "H" else -1) == self.secret:
-            window.alert("CORRECT!")
-            window.location.reload()
+        document.getElementById("solve-ui").classList.add("hidden")
+        document.getElementById("restart_btn").classList.remove("hidden")
+
+        if (gid, gw) == self.secret:
+            self.log("🏆 VICTORY! Your logic is flawless.")
+            window.alert("CORRECT! You found the imposter.")
         else:
-            window.alert(f"WRONG. It was Ball {self.secret[0]} ({'Heavy' if self.secret[1]==1 else 'Light'}).")
+            sid, sw = self.secret
+            msg = f"❌ FAILED. Ball {sid} was {'Heavier' if sw==1 else 'Lighter'}."
+            self.log(msg)
+            window.alert(msg)
 
-game = None
-def start(e):
-    global game
+engine = None
+def start_game(e):
+    global engine
     n = int(document.getElementById("ball_count").value)
     document.getElementById("setup-area").classList.add("hidden")
     document.getElementById("game-area").classList.remove("hidden")
-    game = InteractiveGame(n)
+    engine = UserChallenge(n)
 
-document.getElementById("start_btn").onclick = create_proxy(start)
-document.getElementById("weigh_btn").onclick = create_proxy(lambda e: game.weigh(e))
-document.getElementById("solve_btn").onclick = create_proxy(lambda e: game.solve(e))
+document.getElementById("start_btn").onclick = create_proxy(start_game)
+document.getElementById("weigh_btn").onclick = create_proxy(lambda e: engine.weigh(e))
+document.getElementById("confirm_solve_btn").onclick = create_proxy(lambda e: engine.final_guess(e))
 </script>
 </body>
 </html>
