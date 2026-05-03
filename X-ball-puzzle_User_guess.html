@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Logic Master - Delayed Spoiler</title>
+    <title>Logic Master - Hub Edition</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; display: flex; justify-content: center; padding: 20px; color: #1e293b; }
-        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 950px; }
+        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 950px; position: relative; }
+        
+        /* Navigation */
+        .nav-header { display: flex; justify-content: flex-start; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
         
         .header-stats { display: flex; justify-content: space-around; background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .stat-value { display: block; font-size: 1.5rem; font-weight: bold; color: #2563eb; }
@@ -33,7 +36,7 @@
         .storage-area { margin-top: 20px; padding: 15px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; display: flex; flex-wrap: wrap; min-height: 80px; justify-content: center; gap: 5px; }
         
         #solve-ui { background: #fff7ed; border: 2px solid #f97316; padding: 20px; border-radius: 12px; margin-top: 20px; text-align: center; }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-gray { background: #64748b; } .btn-blue { background: #3b82f6; } .btn-orange { background: #f97316; } .btn-green { background: #10b981; }
         .hidden { display: none !important; }
         .locked { pointer-events: none; opacity: 0.5; }
@@ -42,10 +45,15 @@
 <body>
 
 <div class="container">
+    <div class="nav-header">
+        <a href="index.html" class="btn btn-gray">← Back to Hub</a>
+    </div>
+
     <div id="setup-area" style="text-align: center;">
-        <h2>User Challenge: Logic Master</h2>
+        <h2>Logic Master Challenge</h2>
+        <p>Set ball count and start the puzzle:</p>
         <input type="number" id="ball_count" value="12" min="3" max="30" style="padding:8px; width:70px; text-align:center;">
-        <button id="start_btn" class="btn btn-green">Start New Puzzle</button>
+        <button id="start_btn" class="btn btn-green">Start Game</button>
     </div>
 
     <div id="game-area" class="hidden">
@@ -63,7 +71,7 @@
                         <div class="pan right" id="pan_r"></div>
                     </div>
                 </div>
-                <button id="weigh_btn" class="btn btn-blue" style="width: 200px;">Weigh Now</button>
+                <button id="weigh_btn" class="btn btn-blue" style="width: 200px;">Execute Weighing</button>
                 <div id="storage" class="storage-area"></div>
             </div>
 
@@ -75,11 +83,11 @@
                     <button id="reveal_btn" class="btn btn-gray" style="width: 100%; font-size: 0.7rem;">
                         Reveal Solution (30s Delay)
                     </button>
-                    <div id="solution_timer" class="hidden" style="font-size: 0.8rem; margin-top:10px; color: #ef4444;">
-                        Revealing in: <span id="timer_sec">30</span>s
+                    <div id="solution_timer" class="hidden" style="font-size: 0.8rem; margin-top:10px; color: #ef4444; font-weight: bold;">
+                        Wait for it: <span id="timer_sec">30</span>s
                     </div>
                     <div id="ai_solution" class="hidden" style="margin-top:10px; font-weight: bold; color: #b91c1c; border-top: 1px dashed #facc15; padding-top:10px;">
-                        Solution: <span id="solution_text"></span>
+                        The Answer: <span id="solution_text"></span>
                     </div>
                 </div>
                 <div class="log-box" id="status_log"></div>
@@ -87,18 +95,19 @@
         </div>
 
         <div id="solve-ui" class="hidden">
-            <h3 style="margin-top:0; color:#c2410c;">Your Final Guess</h3>
+            <h3 style="margin-top:0; color:#c2410c;">Mandatory Guess</h3>
+            <p>You've reached the weighing limit. Identify the suspect:</p>
             <div style="display: flex; justify-content: center; gap: 10px;">
-                <input type="number" id="final_id" placeholder="ID" style="width:60px; padding:8px;">
-                <select id="final_weight" style="padding:8px;">
+                <input type="number" id="final_id" placeholder="ID" style="width:70px; padding:8px;">
+                <select id="final_weight" style="padding:8px; border-radius: 8px;">
                     <option value="1">Heavier</option>
                     <option value="-1">Lighter</option>
                 </select>
-                <button id="confirm_solve_btn" class="btn btn-orange">Submit</button>
+                <button id="confirm_solve_btn" class="btn btn-orange">Confirm Result</button>
             </div>
         </div>
         
-        <button id="restart_btn" class="btn btn-gray hidden" style="margin-top:20px; width:100%" onclick="location.reload()">Reset Game</button>
+        <button id="restart_btn" class="btn btn-gray hidden" style="margin-top:20px; width:100%" onclick="location.reload()">Start New Session</button>
     </div>
 </div>
 
@@ -108,7 +117,7 @@ import math
 from pyscript import document, window
 from pyodide.ffi import create_proxy
 
-class UserGame:
+class LogicEngine:
     def __init__(self, n):
         self.n = n
         self.step = 0
@@ -119,8 +128,8 @@ class UserGame:
         self.timer_active = False
         
         self.init_ui()
-        self.update_stats()
-        self.log(f"New puzzle with {n} balls. Good luck!")
+        self.update_ui()
+        self.log(f"Puzzle initialized: {n} balls. Limit: {self.max_steps} steps.")
 
     def init_ui(self):
         storage = document.getElementById("storage")
@@ -146,20 +155,20 @@ class UserGame:
         balls = sorted(list(storage.children), key=lambda x: int(x.innerText))
         for b in balls: storage.appendChild(b)
 
-    def update_stats(self):
+    def update_ui(self):
         document.getElementById("stat_step").innerText = str(self.step)
         document.getElementById("stat_max").innerText = str(self.max_steps)
         document.getElementById("stat_hyp").innerText = str(len(self.hypotheses))
         
-        # Hint is always visible
-        suspects = list(set([h[0] for h in self.hypotheses]))
+        # Strategy Hint
+        suspects = sorted(list(set([h[0] for h in self.hypotheses])))
         m = max(1, len(suspects) // 3)
-        document.getElementById("ai_tip").innerText = f"Weigh {m} vs {m} using suspects {suspects[:m*2]}."
+        document.getElementById("ai_tip").innerText = f"Weigh {m} vs {m}. Use suspects from: {suspects[:m*2]}"
 
         if self.step >= self.max_steps:
-            self.lock_and_solve()
+            self.trigger_force_solve()
 
-    def start_reveal_timer(self, e):
+    def start_timer(self, e):
         if self.timer_active: return
         self.timer_active = True
         document.getElementById("reveal_btn").classList.add("hidden")
@@ -182,23 +191,22 @@ class UserGame:
         r_ids = [int(b.innerText) for b in document.getElementById("pan_r").children]
         
         if len(l_ids) != len(r_ids) or len(l_ids) == 0:
-            window.alert("Unbalanced scales! Ensure both pans have same amount of balls.")
+            window.alert("Equal numbers required on both pans!")
             return
 
         self.step += 1
         sid, sw = self.secret
-        l_mass = sw if sid in l_ids else 0
-        r_mass = sw if sid in r_ids else 0
+        lm = sw if sid in l_ids else 0
+        rm = sw if sid in r_ids else 0
         
-        res = "equal" if l_mass == r_mass else "left" if l_mass > r_mass else "right"
+        res = "equal" if lm == rm else "left" if lm > rm else "right"
         document.getElementById("beam_element").className = f"beam tilt-{res}"
         
-        # Logic filter
         code = {"left":"L", "right":"R", "equal":"E"}[res]
         self.hypotheses = [h for h in self.hypotheses if self.sim(h, l_ids, r_ids) == code]
         
-        self.log(f"Step {self.step}: {res.upper()}. Remaining Hypotheses: {len(self.hypotheses)}")
-        self.update_stats()
+        self.log(f"Weighing {self.step}: {res.upper()}. Remaining Hypotheses: {len(self.hypotheses)}")
+        self.update_ui()
 
     def sim(self, h, l, r):
         b, w = h
@@ -206,40 +214,48 @@ class UserGame:
         rm = w if b in r else 0
         return "L" if lm > rm else "R" if rm > lm else "E"
 
-    def lock_and_solve(self):
+    def trigger_force_solve(self):
         document.getElementById("interaction-zone").classList.add("locked")
         document.getElementById("weigh_btn").classList.add("hidden")
         document.getElementById("solve-ui").classList.remove("hidden")
+        self.log("Limit reached! You must submit your guess now.")
 
     def log(self, msg):
         log_el = document.getElementById("status_log")
         log_el.innerHTML += f"<div>> {msg}</div>"
         log_el.scrollTop = log_el.scrollHeight
 
-    def finalize(self, e):
-        gid = int(document.getElementById("final_id").value)
-        gw = int(document.getElementById("final_weight").value)
+    def check_result(self, e):
+        try:
+            gid = int(document.getElementById("final_id").value)
+            gw = int(document.getElementById("final_weight").value)
+        except:
+            window.alert("Please enter a valid Ball ID.")
+            return
+
         document.getElementById("solve-ui").classList.add("hidden")
         document.getElementById("restart_btn").classList.remove("hidden")
 
         if (gid, gw) == self.secret:
-            window.alert("CORRECT! Logic master level reached.")
+            window.alert("🎉 BRAVO! You correctly identified the imposter.")
+            self.log("GAME OVER: Victory!")
         else:
             sid, sw = self.secret
-            window.alert(f"WRONG. It was Ball {sid} ({'Heavy' if sw==1 else 'Light'}).")
+            window.alert(f"❌ WRONG. The imposter was Ball {sid} ({'Heavy' if sw==1 else 'Light'}).")
+            self.log("GAME OVER: Defeat.")
 
-game_inst = None
-def init_game(e):
-    global game_inst
+active_game = None
+def start_game_flow(e):
+    global active_game
     n = int(document.getElementById("ball_count").value)
     document.getElementById("setup-area").classList.add("hidden")
     document.getElementById("game-area").classList.remove("hidden")
-    game_inst = UserGame(n)
+    active_game = LogicEngine(n)
 
-document.getElementById("start_btn").onclick = create_proxy(init_game)
-document.getElementById("weigh_btn").onclick = create_proxy(lambda e: game_inst.weigh(e))
-document.getElementById("reveal_btn").onclick = create_proxy(lambda e: game_inst.start_reveal_timer(e))
-document.getElementById("confirm_solve_btn").onclick = create_proxy(lambda e: game_inst.finalize(e))
+document.getElementById("start_btn").onclick = create_proxy(start_game_flow)
+document.getElementById("weigh_btn").onclick = create_proxy(lambda e: active_game.weigh(e))
+document.getElementById("reveal_btn").onclick = create_proxy(lambda e: active_game.start_timer(e))
+document.getElementById("confirm_solve_btn").onclick = create_proxy(lambda e: active_game.check_result(e))
 </script>
 </body>
 </html>
