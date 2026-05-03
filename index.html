@@ -1,45 +1,37 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kugel-Rätsel Hub</title>
+    <title>X-Balls Puzzle Hub</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            color: #1e293b;
+            line-height: 1.6;
             margin: 0;
+            padding: 20px;
         }
         .hub-container {
             background: white;
-            padding: 2.5rem;
+            padding: 2rem;
             border-radius: 1.5rem;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
         }
-        h1 {
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-        p {
-            color: #64748b;
-            margin-bottom: 2rem;
-        }
+        h1, h2 { color: #0f172a; text-align: center; }
         .menu {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
+            margin-bottom: 3rem;
         }
         .menu-item {
             display: flex;
             align-items: center;
-            padding: 1.2rem;
+            padding: 1rem;
             background: #ffffff;
             border: 2px solid #e2e8f0;
             border-radius: 1rem;
@@ -47,66 +39,102 @@
             color: #1e293b;
             font-weight: bold;
             transition: all 0.2s ease;
-            text-align: left;
         }
         .menu-item:hover {
             border-color: #3b82f6;
             background: #eff6ff;
             transform: translateY(-2px);
         }
-        .icon {
-            font-size: 1.5rem;
-            margin-right: 1rem;
+        .icon { font-size: 1.5rem; margin-right: 1rem; }
+        
+        /* Explanation Section Styles */
+        .explanation {
+            background: #f8fafc;
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid #e2e8f0;
+            text-align: left;
         }
-        .description {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: normal;
-            color: #64748b;
-            margin-top: 0.2rem;
+        .scenario {
+            background: white;
+            padding: 1rem;
+            border-left: 4px solid #3b82f6;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
         }
-        .footer {
+        .theory-box {
+            background: #eef2ff;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #c7d2fe;
             margin-top: 2rem;
-            font-size: 0.75rem;
-            color: #94a3b8;
         }
+        h3 { color: #2563eb; margin-top: 0; }
+        strong { color: #0f172a; }
+        ul { padding-left: 1.5rem; }
     </style>
 </head>
 <body>
 
 <div class="hub-container">
-    <h1>Kugel-Rätsel Logik</h1>
-    <p>Wähle eine Variante des Logik-Puzzles</p>
+    <h1>X-Balls Puzzle</h1>
+    <p style="text-align: center;">The 12-Ball Problem: Logic Puzzle Solved for Any Number of Balls</p>
 
     <nav class="menu">
         <a href="X-ball-puzzle_Comp_guess.html" class="menu-item">
             <span class="icon">🤖</span>
-            <div>
-                Variabel: KI rät
-                <span class="description">Der Computer findet die falsche Kugel bei beliebiger Anzahl.</span>
-            </div>
+            <div>Variable: AI Guesses<br><small style="font-weight:normal">AI finds the ball for any N.</small></div>
         </a>
-
         <a href="X-ball-puzzle_User_guess.html" class="menu-item">
             <span class="icon">🧠</span>
-            <div>
-                Variabel: Du rätst
-                <span class="description">Der Computer versteckt die Kugel, du musst sie finden.</span>
-            </div>
+            <div>Variable: User Guesses<br><small style="font-weight:normal">You find the ball, AI hides it.</small></div>
         </a>
-
         <a href="12-ball-puzzle_Comp_guess.html" class="menu-item">
             <span class="icon">🎯</span>
-            <div>
-                Klassisch: 12 Kugeln / 3 Wägungen
-                <span class="description">Die optimierte KI-Lösung für das exakte 12-Kugeln-Problem.</span>
-            </div>
+            <div>Classic: 12 Balls / 3 Weighs<br><small style="font-weight:normal">The optimized 3-step solution.</small></div>
         </a>
     </nav>
 
-    <div class="footer">
-        Powered by PyScript & Logik-Engine
+    <div class="explanation">
+        <h2>How to Solve the 12-Ball Challenge</h2>
+        <p>Example for 12 balls (other paths possible). <strong>Always start with: 4 vs 4 balls.</strong></p>
+
+        <div class="scenario">
+            <h3>Scenario A: The scale is NOT in balance (4 vs 4)</h3>
+            <p>We now have 4 "potentially heavy", 4 "potentially light", and 4 "guaranteed real" balls. <br>
+            <strong>2nd Weighing:</strong> Pan 1 [1 light, 2 heavy] vs. Pan 2 [1 heavy, 2 real].</p>
+            <ul>
+                <li><strong>A1) Pan 1 is heavier:</strong> Either one of the 2 heavy balls in Pan 1 is the culprit (and is heavy), or the 1 heavy ball in Pan 2 is real and the light one in Pan 1 is actually light. A 3rd weighing of the 2 heavy balls clarifies this.</li>
+                <li><strong>A2) Balance:</strong> The culprit is the one "potentially light" ball left out. Weigh it against a "real" ball to see if it's lighter or heavier.</li>
+                <li><strong>A3) Pan 2 is heavier:</strong> Either the heavy ball in Pan 2 is the culprit, or the light ball in Pan 1 is light. Weigh one of them against a "real" ball to confirm.</li>
+            </ul>
+        </div>
+
+        <div class="scenario">
+            <h3>Scenario B: The scale is in Balance (4 vs 4)</h3>
+            <p>We have identified 8 "real" balls. 4 remain untested.<br>
+            <strong>2nd Weighing:</strong> Pan 1 [1 real, 2 untested] vs. Pan 2 [2 real, 1 untested].</p>
+            <ul>
+                <li><strong>B1) Pan 1 is heavier:</strong> Either one of the 2 untested in the heavy pan is heavy, or the 1 untested in the light pan is light. Weigh the 2 "potentially heavy" balls against each other to find out.</li>
+                <li><strong>B2) Balance:</strong> The 4th untested ball is the culprit! Weigh it against a "real" one to see its weight.</li>
+                <li><strong>B3) Pan 2 is heavier:</strong> Symmetrical to B1. Either the 2 untested in the light pan are light, or the 1 in the heavy pan is heavy.</li>
+            </ul>
+        </div>
+
+        <div class="theory-box">
+            <h3>The Hypothesis Approach (General Solution)</h3>
+            <p>To solve the puzzle for any number of balls, a <strong>Boolean Construct</strong> is used. For every ball, there are 2 hypotheses: "heavy" or "light".</p>
+            <p>
+                Each weighing is a mathematical filter. We analyze all possible weighings and their outcomes (Left, Balance, Right). 
+                Each weighing is weighted by the <strong>minimum number of hypotheses it excludes</strong> across all three results. 
+                The AI chooses the weighing with the highest weight (Minimax strategy), collects the result, and repeats the process with the remaining set of hypotheses.
+            </p>
+        </div>
     </div>
+
+    <p style="text-align: center; color: #94a3b8; font-size: 0.8rem; margin-top: 2rem;">
+        Powered by PyScript & Boolean Logic Engines
+    </p>
 </div>
 
 </body>
