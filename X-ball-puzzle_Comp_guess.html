@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AI Ball Logic - Full Hypothesis Engine</title>
+    <title>AI Logic - Fixed Rendering Engine</title>
     <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
     <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #f8fafc; display: flex; justify-content: center; padding: 20px; color: #1e293b; }
-        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 800px; text-align: center; }
+        .container { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 850px; text-align: center; }
         
         .nav-header { display: flex; justify-content: flex-start; margin-bottom: 20px; }
         .header-stats { display: flex; justify-content: space-around; background: #f1f5f9; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
@@ -15,19 +15,20 @@
         .stat-value { display: block; font-size: 1.5rem; font-weight: bold; color: #2563eb; }
         .stat-label { font-size: 0.75rem; text-transform: uppercase; color: #64748b; }
 
-        .scale-area { position: relative; height: 160px; margin: 2rem 0; border-bottom: 2px solid #f1f5f9; }
-        .beam { width: 100%; height: 8px; background: #334155; position: absolute; top: 50%; left: 0; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 4px; transform-origin: center; }
-        .pan { width: 140px; min-height: 60px; border: 3px solid #334155; border-top: 0; position: absolute; top: 8px; border-radius: 0 0 70px 70px; background: rgba(0,0,0,0.03); display: flex; flex-wrap: wrap; justify-content: center; padding: 5px; }
+        .scale-area { position: relative; height: 180px; margin: 2rem 0; border-bottom: 3px solid #f1f5f9; }
+        .beam { width: 100%; height: 10px; background: #334155; position: absolute; top: 50%; left: 0; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 5px; transform-origin: center; }
+        .pan { width: 140px; min-height: 70px; border: 4px solid #334155; border-top: 0; position: absolute; top: 10px; border-radius: 0 0 70px 70px; background: rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; justify-content: center; padding: 8px; align-content: flex-start; }
         .left { left: 0; } .right { right: 0; }
-        .ball { width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         
-        .btn { padding: 10px 15px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
+        .ball { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; margin: 2px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.15); transition: opacity 0.2s; }
+        
+        .btn { padding: 12px 18px; margin: 5px; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white; text-decoration: none; display: inline-block; }
         .btn-blue { background: #2563eb; } .btn-gray { background: #64748b; } .btn-red { background: #e11d48; } .btn-green { background: #16a34a; width: 100%; font-size: 1.1rem; }
         .tilt-left { transform: rotate(-10deg); } .tilt-right { transform: rotate(10deg); }
         
-        #status-log { background: #1e293b; color: #38bdf8; font-family: 'Consolas', monospace; font-size: 0.85rem; padding: 15px; border-radius: 8px; height: 150px; overflow-y: auto; text-align: left; margin-top: 20px; }
+        #status-log { background: #1e293b; color: #38bdf8; font-family: 'Consolas', monospace; font-size: 0.85rem; padding: 15px; border-radius: 8px; height: 140px; overflow-y: auto; text-align: left; margin-top: 20px; border: 1px solid #334155; }
         .hidden { display: none !important; }
-        input { font-size: 1.2rem; width: 80px; text-align: center; padding: 5px; border-radius: 5px; border: 1px solid #cbd5e1; }
+        input { font-size: 1.2rem; width: 85px; text-align: center; padding: 8px; border-radius: 6px; border: 1px solid #cbd5e1; }
     </style>
 </head>
 <body>
@@ -38,17 +39,18 @@
     </div>
 
     <div id="setup-area">
-        <h2>AI Logic Engine</h2>
-        <p>Number of Balls:</p>
-        <input type="number" id="ball_count" value="12" min="3" max="40">
-        <button id="start_btn" class="btn btn-green" style="margin-top: 20px;">Start AI Calculation</button>
+        <h2>Computer Guessing Engine</h2>
+        <p>Enter ball count (the AI will find the unique one):</p>
+        <input type="number" id="ball_count" value="12" min="3" max="50">
+        <button id="start_btn" class="btn btn-green" style="margin-top: 20px;">Initialize Calculation</button>
     </div>
 
     <div id="game-area" class="hidden">
         <div class="header-stats">
+            <div class="stat-card"><span class="stat-label">Initial Count</span><span id="stat_total" class="stat-value">-</span></div>
             <div class="stat-card"><span class="stat-label">Step</span><span id="stat_step" class="stat-value">1</span></div>
-            <div class="stat-card"><span class="stat-label">Max Allowed</span><span id="stat_max" class="stat-value">3</span></div>
-            <div class="stat-card"><span class="stat-label">Hypotheses</span><span id="stat_hyp" class="stat-value">24</span></div>
+            <div class="stat-card"><span class="stat-label">Max Weighs</span><span id="stat_max" class="stat-value">3</span></div>
+            <div class="stat-card"><span class="stat-label">Possibilities</span><span id="stat_hyp" class="stat-value">24</span></div>
         </div>
 
         <div class="scale-area">
@@ -58,19 +60,20 @@
             </div>
         </div>
 
-        <h3 id="instruction">AI is analyzing...</h3>
+        <h3 id="instruction">Determining optimal move...</h3>
         
         <div id="action_btns">
-            <button id="v_left" class="btn btn-blue">Left is Heavier</button>
-            <button id="v_equal" class="btn btn-gray">Balanced</button>
-            <button id="v_right" class="btn btn-red">Right is Heavier</button>
+            <button id="v_left" class="btn btn-blue">Left Pan Heavier</button>
+            <button id="v_equal" class="btn btn-gray">Balanced (Equal)</button>
+            <button id="v_right" class="btn btn-red">Right Pan Heavier</button>
         </div>
 
-        <div id="result_display" class="hidden" style="margin-top:20px; padding:20px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; color:#166534; font-weight:bold;"></div>
-        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">Restart</button>
+        <div id="result_display" class="hidden" style="margin-top:20px; padding:25px; background:#f0fdf4; border:2px solid #22c55e; border-radius:12px; color:#166534; font-size: 1.4rem; font-weight:bold;"></div>
+        <button id="reload_btn" class="btn btn-gray hidden" onclick="location.reload()">New Game</button>
 
         <div id="status-log"></div>
-        <div id="storage" class="hidden"></div> <!-- Hidden storage for ball elements -->
+        <!-- Hidden storage to hold ball elements when not on scale -->
+        <div id="storage" class="hidden"></div> 
     </div>
 </div>
 
@@ -79,22 +82,25 @@ from pyscript import document, window
 from pyodide.ffi import create_proxy
 import math
 
-class HypothesisEngine:
+class RobustSolver:
     def __init__(self, n):
         self.n = n
         self.hypotheses = [(i, w) for i in range(1, n + 1) for w in [1, -1]]
         self.step = 0
         self.max_weighs = math.ceil(math.log(2 * n, 3))
+        
+        document.getElementById("stat_total").innerText = str(n)
         document.getElementById("stat_max").innerText = str(self.max_weighs)
         
-        # Initial Kugel-Elemente im "Storage" erstellen
+        # Create all physical ball elements once
         storage = document.getElementById("storage")
+        storage.innerHTML = "" # Clear previous
         for i in range(1, n + 1):
             ball = document.createElement("div")
-            ball.className = "ball"; ball.id = f"ball_{i}"; ball.innerText = str(i)
+            ball.className = "ball"; ball.id = f"comp_ball_{i}"; ball.innerText = str(i)
             storage.appendChild(ball)
 
-        self.log(f"Engine ready. Total hypotheses: {len(self.hypotheses)}")
+        self.log(f"System ready. {len(self.hypotheses)} possible outcomes identified.")
         self.calculate_next_step()
 
     def log(self, msg):
@@ -110,37 +116,38 @@ class HypothesisEngine:
 
     def calculate_next_step(self):
         if len(self.hypotheses) <= 1:
-            self.show_result()
+            self.finish()
             return
 
         self.step += 1
         document.getElementById("stat_step").innerText = str(self.step)
         document.getElementById("stat_hyp").innerText = str(len(self.hypotheses))
 
-        # Suche optimale Wägung (Minimax)
         suspects = list(set([h[0] for h in self.hypotheses]))
         safe = [i for i in range(1, self.n + 1) if i not in suspects]
         
         best_l, best_r = [], []
         min_worst_case = 999
 
-        # Heuristik: Probiere verschiedene m vs m
+        # Search for best split
         for m in range(1, (self.n // 2) + 1):
+            # Special 4-4 start optimization for 12 balls
             if self.n == 12 and self.step == 1 and m != 4: continue
             
             for nl in range(min(m, len(suspects)) + 1):
                 for nr in range(min(m, len(suspects) - nl) + 1):
                     l_s = suspects[:nl]
                     r_s = suspects[nl:nl+nr]
+                    
                     if len(l_s) + (m - len(l_s)) <= self.n and len(r_s) + (m - len(r_s)) <= self.n:
                         l_final = l_s + safe[:m-len(l_s)]
                         r_final = r_s + safe[m-len(l_s) : m-len(l_s)+m-len(r_s)]
                         
                         if len(l_final) == m and len(r_final) == m:
-                            outcomes = {"L":0, "R":0, "E":0}
-                            for h in self.hypotheses: outcomes[self.get_outcome(h, l_final, r_final)] += 1
+                            counts = {"L":0, "R":0, "E":0}
+                            for h in self.hypotheses: counts[self.get_outcome(h, l_final, r_final)] += 1
                             
-                            worst = max(outcomes.values())
+                            worst = max(counts.values())
                             if worst < min_worst_case:
                                 min_worst_case = worst
                                 best_l, best_r = l_final, r_final
@@ -150,58 +157,69 @@ class HypothesisEngine:
         self.render_scale()
 
     def render_scale(self):
-        # Scale leeren
         l_pan = document.getElementById("p_left")
         r_pan = document.getElementById("p_right")
+        storage = document.getElementById("storage")
+        
+        # 1. FORCE CLEANUP: Move every single ball back to storage first
+        for i in range(1, self.n + 1):
+            b_el = document.getElementById(f"comp_ball_{i}")
+            if b_el: storage.appendChild(b_el)
+            
+        # 2. CLEAR PANS: Remove any leftover text/fragments
         l_pan.innerHTML = ""
         r_pan.innerHTML = ""
         document.getElementById("beam_element").className = "beam"
         
-        # Kugeln in Schalen schieben
+        # 3. RE-DISTRIBUTE: Move required balls into pans
         for b_id in self.current_l:
-            l_pan.appendChild(document.getElementById(f"ball_{b_id}"))
+            ball_node = document.getElementById(f"comp_ball_{b_id}")
+            l_pan.appendChild(ball_node)
+        
         for b_id in self.current_r:
-            r_pan.appendChild(document.getElementById(f"ball_{b_id}"))
+            ball_node = document.getElementById(f"comp_ball_{b_id}")
+            r_pan.appendChild(ball_node)
             
-        document.getElementById("instruction").innerText = f"AI suggests weighing {len(self.current_l)} vs {len(self.current_r)}"
-        self.log(f"Step {self.step}: Best move minimizes worst-case to {math.ceil(len(self.hypotheses)/3)} options.")
+        document.getElementById("instruction").innerText = f"Weigh {len(self.current_l)} balls on each side."
+        self.log(f"Step {self.step}: Analyzing {self.current_l} vs {self.current_r}")
 
-    def process_feedback(self, res):
+    def submit_feedback(self, res):
         code = {"left":"L", "right":"R", "equal":"E"}[res]
-        # Neigung visualisieren
         document.getElementById("beam_element").className = f"beam tilt-{res}" if res != "equal" else "beam"
         
         before = len(self.hypotheses)
         self.hypotheses = [h for h in self.hypotheses if self.get_outcome(h, self.current_l, self.current_r) == code]
-        self.log(f"Result: {res.upper()}. Remaining possibilities: {len(self.hypotheses)}")
         
-        # Kurze Pause für die Animation, dann nächster Schritt
-        window.setTimeout(create_proxy(self.calculate_next_step), 600)
+        self.log(f"Feedback: {res.upper()}. Filtered {before} down to {len(self.hypotheses)} suspects.")
+        
+        # Slight delay before next calculation to allow animation to finish
+        window.setTimeout(create_proxy(self.calculate_next_step), 700)
 
-    def show_result(self):
+    def finish(self):
         document.getElementById("action_btns").classList.add("hidden")
         res_box = document.getElementById("result_display")
         res_box.classList.remove("hidden")
         document.getElementById("reload_btn").classList.remove("hidden")
         
         if len(self.hypotheses) == 1:
-            id, w = self.hypotheses[0]
-            res_box.innerText = f"RESULT: Ball {id} is {'HEAVIER' if w==1 else 'LIGHTER'}!"
+            ball, weight = self.hypotheses[0]
+            w_str = "HEAVIER" if weight == 1 else "LIGHTER"
+            res_box.innerText = f"Found it! Ball {ball} is {w_str}."
         else:
-            res_box.innerText = "Contradiction! Check your inputs."
+            res_box.innerText = "Error: Input contradiction detected."
 
-engine = None
+solver = None
 def start(e):
-    global engine
-    n = int(document.getElementById("ball_count").value)
+    global solver
+    n_val = int(document.getElementById("ball_count").value)
     document.getElementById("setup-area").classList.add("hidden")
     document.getElementById("game-area").classList.remove("hidden")
-    engine = HypothesisEngine(n)
+    solver = RobustSolver(n_val)
 
 document.getElementById("start_btn").onclick = create_proxy(start)
-document.getElementById("v_left").onclick = create_proxy(lambda e: engine.process_feedback("left"))
-document.getElementById("v_equal").onclick = create_proxy(lambda e: engine.process_feedback("equal"))
-document.getElementById("v_right").onclick = create_proxy(lambda e: engine.process_feedback("right"))
+document.getElementById("v_left").onclick = create_proxy(lambda e: solver.submit_feedback("left"))
+document.getElementById("v_equal").onclick = create_proxy(lambda e: solver.submit_feedback("equal"))
+document.getElementById("v_right").onclick = create_proxy(lambda e: solver.submit_feedback("right"))
 </script>
 </body>
 </html>
