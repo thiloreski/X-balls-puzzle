@@ -11,16 +11,16 @@ Damit sind 4 "potentiell schwerere", 4 "potentiell leichtere" und 4 "echte" iden
 
 Nächste Wägung:
 1. Waagschale: 1 "potentiell leichtere", 2 "potentiell schwerere" ,
-2. Waagschale: 1 "potentiell schwerere" und 2 "echte".
+2. Waagschale: 1 "potentiell schwerere", 1 "potentiell leichtere" und 1 "echte".
 
 ### A1) Ergebnis: 1. Waagschale schwerer:
 Entweder ist eine von den 2 "potentiell schwereren" die Falsche und die ist schwerer, 
-oder die "potentiell leichtere" ist die Falsche und ist leichter. 
+oder die "potentiell leichtere" in der 2. Waagschale ist die Falsche und ist leichter. 
 
 Die weitere Wägung der beiden potentiell schwereren identifiziert diese eindeutig oder, wenn gleich, ist die andere die leichtere.
 
 ### A2) Ergebnis: Waagschalen im Gleichgewicht
-Alle bisher geprüften Kugeln sind "echt" es bleibt noch eine, die ist die Falsche, eine Wägung mit einer "echten" zeigt, ob sie schwerer oder leichter ist.
+Es bleiben aktuell 2 "potentiell leichtere" und eine "potentiell schwerere" übrig, eine der "potentiell leichteren auf jede Waagschle zeigt das Ergebnis.
 
 ### A3) Ergebnis: 2. Waagschale schwerer:
 Entweder ist die "potentiell schwerere" in der 2 Waagschale die Falsche und schwerer,
@@ -35,7 +35,7 @@ Dann 2. Wägung mit: In der 1. Waagschale 1 der "echten", 2 der ungeprüften, an
 
 ### B1) 2. Wägung Ergebnis: 1. Waagschale schwerer. 
 
-Das heißt: Entweder eine der 2 ungeprüften in der schwereren  Waagschale ist schwerer oder die andere ungeprüfte in der anderen Waagschale ist leichter. Eine weitere Wägung mit je einer der 2 ungeprüften aus der schwereren Waagschale der 2. Wägung, nun in je einer Waagschale, zeigt as Ergebnis. Ist eine schwerer, dann ist die Kugel darin die falsche und sie ist schwerer, wenn die Waagschalen gleich stehen, ist die andere, die bei der 2. Wägung in der leichteren Waagschale war die Falsche und sie ist leichter.
+Das heißt: Entweder eine der 2 ungeprüften in der schwereren  Waagschale ist schwerer oder die andere ungeprüfte in der anderen Waagschale ist leichter. Eine weitere Wägung mit je einer der 2 ungeprüften aus der 1.  Waagschale der 2. Wägung zeigt das Ergebnis. Ist eine schwerer, dann ist die Kugel darin die falsche und sie ist schwerer, wenn die Waagschalen gleich stehen, ist die andere, die bei der 2. Wägung in der leichteren Waagschale war die Falsche und sie ist leichter.
 
 ### B2) 2. Wägung Gleichgewicht
 
