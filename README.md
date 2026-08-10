@@ -20,7 +20,7 @@ oder die "potentiell leichtere" in der 2. Waagschale ist die Falsche und ist lei
 Die weitere Wägung der beiden potentiell schwereren identifiziert diese eindeutig oder, wenn gleich, ist die andere die leichtere.
 
 ### A2) Ergebnis: Waagschalen im Gleichgewicht
-Es bleiben aktuell 2 "potentiell leichtere" und eine "potentiell schwerere" übrig, eine der "potentiell leichteren auf jede Waagschle zeigt das Ergebnis.
+Es bleiben aktuell 2 "potentiell leichtere" und eine "potentiell schwerere" übrig, eine der "potentiell leichteren" auf jede Waagschle zeigt das Ergebnis.
 
 ### A3) Ergebnis: 2. Waagschale schwerer:
 Entweder ist die "potentiell schwerere" in der 2 Waagschale die Falsche und schwerer,
